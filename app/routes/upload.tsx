@@ -82,8 +82,10 @@ const Upload = () => {
     data.feedback = JSON.parse(feedbackText);
     await kv.set(`resume:${uuid}`, JSON.stringify(data));
 
-    setStatusText("Analyzed the resume successfully");
+    setStatusText("Analysis complete, redirecting...");
     console.log(data);
+
+    navigate(`/resume/${uuid}`);
   };
 
   const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
