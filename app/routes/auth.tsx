@@ -28,17 +28,17 @@ const Auth = () => {
           <div>
             {isLoading ? (
               <button className="auth-button animate-pulse">
-                <p>Signing you in...</p>
+                <p>Getting you signed in...</p>
               </button>
             ) : (
               <>
                 {auth.isAuthenticated ? (
                   <button className="auth-button" onClick={auth.signOut}>
-                    <p>Log Out</p>
+                    <p>Sign Out</p>
                   </button>
                 ) : (
                   <button className="auth-button" onClick={auth.signIn}>
-                    <p>Log In</p>
+                    <p>Sign In</p>
                   </button>
                 )}
               </>

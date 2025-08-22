@@ -55,7 +55,7 @@ const Resume = () => {
         <Link to="/" className="back-button">
           <img src="/icons/back.svg" alt="back" className="w-2.5 h-2.5" />
           <span className="text-gray-800 text-sm font-semibold">
-            Back to Homepage
+            Back to Home
           </span>
         </Link>
       </nav>
