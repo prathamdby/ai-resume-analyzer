@@ -23,7 +23,7 @@ const Auth = () => {
         <section className="flex flex-col gap-8 bg-white rounded-2xl p-10">
           <div className="flex flex-col items-center gap-2 text-center">
             <h1>Welcome</h1>
-            <h2>Log In to Continue Your Job Journey</h2>
+            <h2>Sign in to continue your career journey</h2>
           </div>
           <div>
             {isLoading ? (

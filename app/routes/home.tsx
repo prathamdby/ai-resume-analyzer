@@ -9,7 +9,7 @@ import { usePuterStore } from "~/lib/puter";
 export function meta({}: Route.MetaArgs) {
   return [
     { title: "Resumind" },
-    { name: "description", content: "Smart feedback for your dream job!" },
+    { name: "description", content: "Get personalized feedback to land your dream job" },
   ];
 }
 
@@ -45,12 +45,12 @@ export default function Home() {
 
       <section className="main-section">
         <div className="page-heading py-16">
-          <h1>Track Your Applications & Resume Ratings</h1>
+          <h1>Track Your Applications and Resume Performance</h1>
 
           {!loadingResumes && resumes.length === 0 ? (
-            <h2>No resumes found. Upload your first resume to get started.</h2>
+            <h2>Ready to get started? Upload your first resume and see how it performs.</h2>
           ) : (
-            <h2>Review your submissions and check AI-powered feedback.</h2>
+            <h2>Review your submissions and discover what makes your resume shine.</h2>
           )}
         </div>
 
