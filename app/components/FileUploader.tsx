@@ -68,7 +68,7 @@ const FileUploader = ({ onFileSelect }: FileUploaderProps) => {
                 drop
               </p>
               <p className="text-lg text-gray-500">
-                PDF (max {formatSize(maxFileSize)})
+                PDF files up to {formatSize(maxFileSize)}
               </p>
             </div>
           )}
