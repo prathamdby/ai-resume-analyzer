@@ -1,12 +1,14 @@
-import { useCallback } from "react";
+﻿import { useCallback } from "react";
 import { useDropzone } from "react-dropzone";
-import { formatSize } from "~/lib/utils";
+import { cn, formatSize } from "~/lib/utils";
 
 interface FileUploaderProps {
   onFileSelect?: (file: File | null) => void;
 }
 
 const FileUploader = ({ onFileSelect }: FileUploaderProps) => {
+  const maxFileSize = 20 * 1024 * 1024;
+
   const onDrop = useCallback(
     (acceptedFiles: File[]) => {
       const file = acceptedFiles[0] || null;
@@ -15,67 +17,78 @@ const FileUploader = ({ onFileSelect }: FileUploaderProps) => {
     [onFileSelect],
   );
 
-  const maxFileSize = 20 * 1024 * 1024;
-
-  const { getRootProps, getInputProps, isDragActive, acceptedFiles } =
-    useDropzone({
-      onDrop,
-      multiple: false,
-      accept: { "application/pdf": [".pdf"] },
-      maxSize: maxFileSize,
-    });
+  const {
+    getRootProps,
+    getInputProps,
+    isDragActive,
+    acceptedFiles,
+    fileRejections,
+  } = useDropzone({
+    onDrop,
+    multiple: false,
+    accept: { "application/pdf": [".pdf"] },
+    maxSize: maxFileSize,
+  });
 
   const file = acceptedFiles[0] || null;
+  const rejection = fileRejections[0];
 
   return (
-    <div className="w-full gradient-border">
-      <div {...getRootProps()}>
-        <input {...getInputProps()} />
+    <div className="uploader surface-card surface-card--tight" role="group" aria-label="Resume upload">
+      <div
+        {...getRootProps({
+          className: cn(
+            "uploader-dropzone",
+            isDragActive && "border-indigo-300 bg-indigo-50/60",
+          ),
+        })}
+      >
+        <input {...getInputProps({ "aria-label": "Upload resume PDF" })} />
 
-        <div className="space-y-4 cursor-pointer">
-          {file ? (
-            <div
-              className="uploader-selected-file"
-              onClick={(e) => e.stopPropagation()}
+        {!file && (
+          <div className="flex flex-col items-center gap-4 text-center">
+            <div className="uploader-dropzone__icon">
+              <img src="/icons/info.svg" alt="Upload" className="h-10 w-10" />
+            </div>
+            <div className="space-y-1 text-sm text-slate-600">
+              <p className="text-base font-semibold text-slate-700">
+                {isDragActive ? "Drop your resume" : "Click to upload or drag and drop"}
+              </p>
+              <p>PDF only, up to {formatSize(maxFileSize)}</p>
+            </div>
+          </div>
+        )}
+
+        {file && (
+          <div className="uploader-selected-file" onClick={(event) => event.stopPropagation()}>
+            <div className="flex items-center gap-3">
+              <img src="/images/pdf.png" alt="PDF" className="h-10 w-10" />
+              <div className="text-left">
+                <p className="text-sm font-medium text-slate-700" title={file.name}>
+                  {file.name}
+                </p>
+                <p className="text-xs text-slate-500">{formatSize(file.size)}</p>
+              </div>
+            </div>
+            <button
+              type="button"
+              className="inline-flex items-center rounded-full border border-slate-200 px-3 py-1 text-xs font-semibold text-slate-600 hover:bg-slate-100"
+              onClick={() => onFileSelect?.(null)}
             >
-              <img src="/images/pdf.png" alt="pdf" className="size-10" />
-              <div className="flex items-center space-x-3">
-                <div>
-                  <p className="text-sm text-gray-700 font-medium truncate max-w-xs">
-                    {file.name}
-                  </p>
-                  <p className="text-sm text-gray-500">
-                    {formatSize(file.size)}
-                  </p>
-                </div>
-              </div>
-
-              <button
-                className="p-2 cursor-pointer"
-                onClick={() => onFileSelect?.(null)}
-              >
-                <img src="/icons/cross.svg" alt="remove" className="w-4 h-4" />
-              </button>
-            </div>
-          ) : (
-            <div>
-              <div className="mx-auto w-16 h-16 flex items-center justify-center mb-2">
-                <img src="/icons/info.svg" alt="upload" className="size-20" />
-              </div>
-
-              <p className="text-lg text-gray-500">
-                <span className="font-bold">Click to upload</span> or drag and
-                drop
-              </p>
-              <p className="text-lg text-gray-500">
-                PDF files up to {formatSize(maxFileSize)}
-              </p>
-            </div>
-          )}
-        </div>
+              Remove
+            </button>
+          </div>
+        )}
       </div>
+
+      {rejection && (
+        <p className="mt-3 text-sm font-semibold text-amber-600" role="alert">
+          {rejection.errors[0]?.message || "Please upload a PDF smaller than 20 MB."}
+        </p>
+      )}
     </div>
   );
 };
 
 export default FileUploader;
+

@@ -5,51 +5,18 @@ import {
   AccordionHeader,
   AccordionItem,
 } from "./Accordion";
+import ScoreBadge from "./ScoreBadge";
 
-const ScoreBadge = ({ score }: { score: number }) => {
+const CategoryHeader = ({ title, categoryScore }: { title: string; categoryScore: number }) => {
   return (
-    <div
-      className={cn(
-        "flex flex-row gap-1 items-center px-2 py-0.5 rounded-[96px]",
-        score > 69
-          ? "bg-badge-green"
-          : score > 39
-            ? "bg-badge-yellow"
-            : "bg-badge-red",
-      )}
-    >
-      <img
-        src={score > 69 ? "/icons/check.svg" : "/icons/warning.svg"}
-        alt="score"
-        className="size-4"
-      />
-      <p
-        className={cn(
-          "text-sm font-medium",
-          score > 69
-            ? "text-badge-green-text"
-            : score > 39
-              ? "text-badge-yellow-text"
-              : "text-badge-red-text",
-        )}
-      >
-        {score}/100
-      </p>
-    </div>
-  );
-};
-
-const CategoryHeader = ({
-  title,
-  categoryScore,
-}: {
-  title: string;
-  categoryScore: number;
-}) => {
-  return (
-    <div className="flex flex-row gap-4 items-center py-2">
-      <p className="text-2xl font-semibold">{title}</p>
-      <ScoreBadge score={categoryScore} />
+    <div className="flex flex-wrap items-center justify-between gap-3">
+      <div className="flex items-center gap-3">
+        <span className="text-base font-semibold text-slate-900">{title}</span>
+        <ScoreBadge score={categoryScore} size="sm" showScore={false} />
+      </div>
+      <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold uppercase tracking-[0.28em] text-slate-500">
+        {categoryScore}/100
+      </span>
     </div>
   );
 };
@@ -59,63 +26,60 @@ const CategoryContent = ({
 }: {
   tips: { type: "good" | "improve"; tip: string; explanation: string }[];
 }) => {
+  if (!tips || tips.length === 0) {
+    return (
+      <p className="text-sm text-slate-600">
+        No recommendations were generated for this category yet. Re-run the analysis to refresh the
+        guidance.
+      </p>
+    );
+  }
+
   return (
-    <div className="flex flex-col gap-4 items-center w-full">
-      <div className="bg-gray-50 w-full rounded-lg px-5 py-4 grid grid-cols-2 gap-4">
+    <div className="flex flex-col gap-4">
+      <ul className="grid gap-3 sm:grid-cols-2">
         {tips.map((tip, index) => (
-          <div className="flex flex-row gap-2 items-center" key={index}>
-            <img
-              src={
-                tip.type === "good" ? "/icons/check.svg" : "/icons/warning.svg"
-              }
-              alt="score"
-              className="size-5"
-            />
-            <p className="text-xl text-gray-500 ">{tip.tip}</p>
-          </div>
-        ))}
-      </div>
-      <div className="flex flex-col gap-4 w-full">
-        {tips.map((tip, index) => (
-          <div
-            key={index + tip.tip}
-            className={cn(
-              "flex flex-col gap-2 rounded-2xl p-4",
-              tip.type === "good"
-                ? "bg-green-50 border border-green-200 text-green-700"
-                : "bg-yellow-50 border border-yellow-200 text-yellow-700",
-            )}
+          <li
+            key={`summary-${index}-${tip.tip}`}
+            className="flex items-start gap-3 rounded-2xl border border-slate-100 bg-white/90 px-4 py-3"
           >
-            <div className="flex flex-row gap-2 items-center">
+            <span
+              className={cn(
+                "inline-flex size-9 shrink-0 items-center justify-center rounded-full",
+                tip.type === "good" ? "bg-green-100" : "bg-amber-100",
+              )}
+            >
               <img
-                src={
-                  tip.type === "good"
-                    ? "/icons/check.svg"
-                    : "/icons/warning.svg"
-                }
-                alt="score"
-                className="size-5"
+                src={tip.type === "good" ? "/icons/check.svg" : "/icons/warning.svg"}
+                alt={tip.type === "good" ? "Positive insight" : "Improvement suggested"}
+                className="h-5 w-5"
               />
-              <p className="text-xl font-semibold">{tip.tip}</p>
+            </span>
+            <div className="space-y-1 text-sm text-slate-600">
+              <p className="font-semibold text-slate-800">{tip.tip}</p>
+              <p>{tip.explanation}</p>
             </div>
-            <p>{tip.explanation}</p>
-          </div>
+          </li>
         ))}
-      </div>
+      </ul>
     </div>
   );
 };
 
 const Details = ({ feedback }: { feedback: Feedback }) => {
   return (
-    <div className="flex flex-col gap-4 w-full">
-      <Accordion>
+    <section className="section-panel surface-card">
+      <div className="flex flex-col gap-2">
+        <h2 className="text-2xl font-semibold text-slate-900">Detailed coaching</h2>
+        <p className="text-sm text-slate-600">
+          Expand each section to review what is working well and the edits that will unlock the next
+          score jump.
+        </p>
+      </div>
+      <Accordion className="space-y-3" defaultOpen="tone-style" allowMultiple>
         <AccordionItem id="tone-style">
           <AccordionHeader itemId="tone-style">
-            <CategoryHeader
-              title="Tone & Style"
-              categoryScore={feedback.toneAndStyle.score}
-            />
+            <CategoryHeader title="Tone & Style" categoryScore={feedback.toneAndStyle.score} />
           </AccordionHeader>
           <AccordionContent itemId="tone-style">
             <CategoryContent tips={feedback.toneAndStyle.tips} />
@@ -123,10 +87,7 @@ const Details = ({ feedback }: { feedback: Feedback }) => {
         </AccordionItem>
         <AccordionItem id="content">
           <AccordionHeader itemId="content">
-            <CategoryHeader
-              title="Content"
-              categoryScore={feedback.content.score}
-            />
+            <CategoryHeader title="Content" categoryScore={feedback.content.score} />
           </AccordionHeader>
           <AccordionContent itemId="content">
             <CategoryContent tips={feedback.content.tips} />
@@ -134,10 +95,7 @@ const Details = ({ feedback }: { feedback: Feedback }) => {
         </AccordionItem>
         <AccordionItem id="structure">
           <AccordionHeader itemId="structure">
-            <CategoryHeader
-              title="Structure"
-              categoryScore={feedback.structure.score}
-            />
+            <CategoryHeader title="Structure" categoryScore={feedback.structure.score} />
           </AccordionHeader>
           <AccordionContent itemId="structure">
             <CategoryContent tips={feedback.structure.tips} />
@@ -145,18 +103,17 @@ const Details = ({ feedback }: { feedback: Feedback }) => {
         </AccordionItem>
         <AccordionItem id="skills">
           <AccordionHeader itemId="skills">
-            <CategoryHeader
-              title="Skills"
-              categoryScore={feedback.skills.score}
-            />
+            <CategoryHeader title="Skills" categoryScore={feedback.skills.score} />
           </AccordionHeader>
           <AccordionContent itemId="skills">
             <CategoryContent tips={feedback.skills.tips} />
           </AccordionContent>
         </AccordionItem>
       </Accordion>
-    </div>
+    </section>
   );
 };
 
 export default Details;
+
+

@@ -1,54 +1,55 @@
+import { useId, useMemo } from "react";
+
 const ScoreCircle = ({ score = 75 }: { score: number }) => {
-  const radius = 40;
-  const stroke = 8;
+  const radius = 44;
+  const stroke = 10;
   const normalizedRadius = radius - stroke / 2;
   const circumference = 2 * Math.PI * normalizedRadius;
-  const progress = score / 100;
-  const strokeDashoffset = circumference * (1 - progress);
+  const progress = Math.max(0, Math.min(score, 100)) / 100;
+  const strokeDashoffset = useMemo(() => circumference * (1 - progress), [circumference, progress]);
+  const gradientId = useId();
 
   return (
-    <div className="relative w-[100px] h-[100px]">
-      <svg
-        height="100%"
-        width="100%"
-        viewBox="0 0 100 100"
-        className="transform -rotate-90"
-      >
-        {/* Background circle */}
-        <circle
-          cx="50"
-          cy="50"
-          r={normalizedRadius}
-          stroke="#e5e7eb"
-          strokeWidth={stroke}
-          fill="transparent"
-        />
-        {/* Partial circle with gradient */}
+    <div className="relative h-[110px] w-[110px]" role="img" aria-label={`Overall score ${score} out of 100`}>
+      <svg height="100%" width="100%" viewBox="0 0 120 120" className="-rotate-90 transform">
         <defs>
-          <linearGradient id="grad" x1="1" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor="#FF97AD" />
-            <stop offset="100%" stopColor="#5171FF" />
+          <linearGradient id={gradientId} x1="1" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor="#8b5cf6" />
+            <stop offset="100%" stopColor="#f97373" />
           </linearGradient>
         </defs>
         <circle
-          cx="50"
-          cy="50"
+          cx="60"
+          cy="60"
           r={normalizedRadius}
-          stroke="url(#grad)"
+          stroke="#e2e8f0"
+          strokeWidth={stroke}
+          fill="transparent"
+          strokeLinecap="round"
+        />
+        <circle
+          cx="60"
+          cy="60"
+          r={normalizedRadius}
+          stroke={`url(#${gradientId})`}
           strokeWidth={stroke}
           fill="transparent"
           strokeDasharray={circumference}
           strokeDashoffset={strokeDashoffset}
           strokeLinecap="round"
+          className="drop-shadow-[0_6px_25px_rgba(99,102,241,0.35)]"
         />
       </svg>
-
-      {/* Score and issues */}
-      <div className="absolute inset-0 flex flex-col items-center justify-center">
-        <span className="font-semibold text-sm">{`${score}/100`}</span>
+      <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center gap-1">
+        <span className="text-xs font-medium uppercase tracking-[0.32em] text-slate-400 leading-none">Score</span>
+        <span className="text-2xl font-semibold leading-none text-slate-900">{score}</span>
+        <span className="text-[11px] font-medium uppercase tracking-[0.3em] text-slate-400 leading-none">
+          /100
+        </span>
       </div>
     </div>
   );
 };
 
 export default ScoreCircle;
+

@@ -1,49 +1,84 @@
-import ScoreBadge from "./ScoreBadge";
+﻿import ScoreBadge from "./ScoreBadge";
 import ScoreGauge from "./ScoreGauge";
 
-const Category = ({ title, score }: { title: string; score: number }) => {
-  const textColor =
-    score > 70
-      ? "text-green-600"
-      : score > 49
-        ? "text-yellow-600"
-        : "text-red-600";
+const buildCategoryCopy = (
+  title: string,
+  summary: string | undefined,
+): string => {
+  if (summary && summary.trim().length > 0) {
+    return summary;
+  }
 
-  return (
-    <div className="resume-summary">
-      <div className="category">
-        <div className="flex flex-row gap-2 items-center justify-center">
-          <p className="text-2xl">{title}</p>
-          <ScoreBadge score={score} />
-        </div>
-        <div className="text-2xl">
-          <span className={textColor}>{score}</span>/100
-        </div>
-      </div>
-    </div>
-  );
+  switch (title) {
+    case "Tone & Style":
+      return "Ensure the language aligns with the company voice and reads naturally.";
+    case "Content":
+      return "Highlight quantifiable impact, relevant achievements, and matching keywords.";
+    case "Structure":
+      return "Keep the layout scannable with consistent sections and spacing.";
+    case "Skills":
+      return "List role-specific capabilities and tools that align with the description.";
+    default:
+      return "Focus on actionable improvements to raise this score.";
+  }
 };
 
 const Summary = ({ feedback }: { feedback: Feedback }) => {
-  return (
-    <div className="bg-white rounded-2xl shadow-md w-full">
-      <div className="flex flex-row items-center p-4 gap-8">
-        <ScoreGauge score={feedback.overallScore} />
+  const categories = [
+    {
+      title: "Tone & Style",
+      score: feedback.toneAndStyle.score,
+      highlight: feedback.toneAndStyle.tips?.[0]?.tip,
+    },
+    {
+      title: "Content",
+      score: feedback.content.score,
+      highlight: feedback.content.tips?.[0]?.tip,
+    },
+    {
+      title: "Structure",
+      score: feedback.structure.score,
+      highlight: feedback.structure.tips?.[0]?.tip,
+    },
+    {
+      title: "Skills",
+      score: feedback.skills.score,
+      highlight: feedback.skills.tips?.[0]?.tip,
+    },
+  ];
 
-        <div className="flex flex-col gap-2">
-          <h2 className="text-2xl font-bold">Your Resume Performance</h2>
-          <p className="text-sm text-gray-500">
-            Here's how your resume scores across the key areas that matter most.
+  return (
+    <section className="section-panel surface-card">
+      <div className="flex flex-col gap-6 lg:flex-row">
+        <ScoreGauge score={feedback.overallScore} />
+        <div className="flex flex-1 flex-col justify-center gap-4">
+          <h2 className="text-2xl font-semibold text-slate-900">Your resume performance</h2>
+          <p className="text-sm text-slate-600">
+            Each category below contributes to the overall score. Improve the weakest areas first to
+            unlock the fastest progress.
           </p>
         </div>
       </div>
 
-      <Category title="Tone & Style" score={feedback.toneAndStyle.score} />
-      <Category title="Content" score={feedback.content.score} />
-      <Category title="Structure" score={feedback.structure.score} />
-      <Category title="Skills" score={feedback.skills.score} />
-    </div>
+      <ul className="grid gap-4 sm:grid-cols-2">
+        {categories.map((category) => (
+          <li
+            key={category.title}
+            className="flex flex-col gap-3 rounded-3xl border border-slate-100 bg-white/90 px-5 py-4 shadow-[var(--shadow-ring)]"
+          >
+            <div className="flex items-center justify-between">
+              <p className="text-base font-semibold text-slate-900">{category.title}</p>
+              <ScoreBadge score={category.score} size="sm" />
+            </div>
+            <p className="text-sm text-slate-600">
+              {buildCategoryCopy(category.title, category.highlight)}
+            </p>
+          </li>
+        ))}
+      </ul>
+    </section>
   );
 };
 
 export default Summary;
+

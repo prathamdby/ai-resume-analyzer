@@ -1,5 +1,6 @@
-import { useEffect } from "react";
+﻿import { useEffect } from "react";
 import { useLocation, useNavigate } from "react-router";
+import Navbar from "~/components/Navbar";
 import { usePuterStore } from "~/lib/puter";
 
 export const meta = () => [
@@ -14,38 +15,46 @@ const Auth = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (auth.isAuthenticated) navigate(next);
+    if (auth.isAuthenticated && next) navigate(next);
   }, [auth.isAuthenticated, next]);
 
   return (
-    <main className="bg-[url('/images/bg-main.svg')] bg-cover min-h-screen flex items-center justify-center">
-      <div className="gradient-border shadow-lg">
-        <section className="flex flex-col gap-8 bg-white rounded-2xl p-10">
-          <div className="flex flex-col items-center gap-2 text-center">
-            <h1>Welcome</h1>
-            <h2>Sign in to continue your career journey</h2>
+    <main className="relative overflow-hidden">
+      <Navbar />
+      <section className="page-shell">
+        <div className="mx-auto flex w-full max-w-lg flex-col gap-8 text-center">
+          <span className="section-eyebrow mx-auto">Welcome back</span>
+          <h1 className="headline text-4xl">Sign in to continue your career journey</h1>
+          <p className="subheadline">
+            Connect your Puter account to save resume versions, store analyses, and pick up where you
+            left off.
+          </p>
+
+          <div className="surface-card surface-card--tight space-y-6">
+            <p className="text-sm font-semibold text-indigo-600" aria-live="polite">
+              {isLoading ? "Checking your session..." : auth.isAuthenticated ? "You are signed in." : "You are signed out."}
+            </p>
+            <div className="flex flex-col gap-4">
+              {isLoading ? (
+                <button className="primary-button" disabled>
+                  Preparing sign-in
+                </button>
+              ) : auth.isAuthenticated ? (
+                <button className="primary-button primary-button--ghost" onClick={auth.signOut}>
+                  Sign out of Puter
+                </button>
+              ) : (
+                <button className="primary-button" onClick={auth.signIn}>
+                  Sign in with Puter
+                </button>
+              )}
+            </div>
+            <p className="text-xs text-slate-500">
+              Need to switch accounts? Sign out first, then sign in with your preferred Puter login.
+            </p>
           </div>
-          <div>
-            {isLoading ? (
-              <button className="auth-button animate-pulse">
-                <p>Getting you signed in...</p>
-              </button>
-            ) : (
-              <>
-                {auth.isAuthenticated ? (
-                  <button className="auth-button" onClick={auth.signOut}>
-                    <p>Sign Out</p>
-                  </button>
-                ) : (
-                  <button className="auth-button" onClick={auth.signIn}>
-                    <p>Sign In</p>
-                  </button>
-                )}
-              </>
-            )}
-          </div>
-        </section>
-      </div>
+        </div>
+      </section>
     </main>
   );
 };

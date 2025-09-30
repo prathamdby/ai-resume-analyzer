@@ -7,15 +7,31 @@ import { convertPdfToImage } from "~/lib/pdf2img";
 import { usePuterStore } from "~/lib/puter";
 import { generateUUID } from "~/lib/utils";
 
+const checklist = [
+  {
+    title: "Tailor to the role",
+    description: "Share the job title and paste the job description to unlock targeted advice.",
+  },
+  {
+    title: "Upload a clean PDF",
+    description: "Use a single-column layout with clear headings for the best ATS results.",
+  },
+  {
+    title: "Iterate quickly",
+    description: "Re-run analyses after updates to track progress and lift your score.",
+  },
+];
+
 const Upload = () => {
   const { auth, isLoading, fs, ai, kv } = usePuterStore();
   const navigate = useNavigate();
   const [isProcessing, setIsProcessing] = useState(false);
-  const [statusText, setStatusText] = useState("");
+  const [statusText, setStatusText] = useState("Upload your resume to begin");
   const [file, setFile] = useState<File | null>(null);
 
-  const handleFileSelect = (file: File | null) => {
-    setFile(file);
+  const handleFileSelect = (newFile: File | null) => {
+    if (isProcessing) return;
+    setFile(newFile);
   };
 
   const handleAnalyze = async ({
@@ -33,7 +49,11 @@ const Upload = () => {
     setStatusText("Uploading your resume...");
 
     const uploadedFile = await fs.upload([file]);
-    if (!uploadedFile) return setStatusText("We couldn't upload your file. Please try again.");
+    if (!uploadedFile) {
+      setStatusText("We could not upload your file. Please try again.");
+      setIsProcessing(false);
+      return;
+    }
 
     setStatusText("Preparing your resume for analysis...");
     const imageFile = await convertPdfToImage(file);
@@ -41,14 +61,18 @@ const Upload = () => {
       const errorMsg = imageFile.error
         ? `We had trouble processing your resume: ${imageFile.error}`
         : "We had trouble processing your resume. Please try again.";
-      return setStatusText(errorMsg);
+      setStatusText(errorMsg);
+      setIsProcessing(false);
+      return;
     }
 
-    setStatusText("Almost there...");
+    setStatusText("Generating preview...");
     const uploadedImage = await fs.upload([imageFile.file]);
-    if (!uploadedImage) return setStatusText("Something went wrong. Please try uploading again.");
-
-    setStatusText("Getting everything ready...");
+    if (!uploadedImage) {
+      setStatusText("Something went wrong. Please try uploading again.");
+      setIsProcessing(false);
+      return;
+    }
 
     const uuid = generateUUID();
     const data = {
@@ -72,7 +96,11 @@ const Upload = () => {
         jobDescription,
       }),
     );
-    if (!feedback) return setStatusText("We couldn't complete the analysis. Please try again.");
+    if (!feedback) {
+      setStatusText("We could not complete the analysis. Please try again.");
+      setIsProcessing(false);
+      return;
+    }
 
     const feedbackText =
       typeof feedback.message.content === "string"
@@ -82,23 +110,23 @@ const Upload = () => {
     data.feedback = JSON.parse(feedbackText);
     await kv.set(`resume:${uuid}`, JSON.stringify(data));
 
-    setStatusText("All done! Taking you to your results...");
-    console.log(data);
-
+    setStatusText("All done! Redirecting to your results...");
     navigate(`/resume/${uuid}`);
   };
 
   const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    const form = e.currentTarget.closest("form");
-    if (!form) return;
+    if (isProcessing || !file) return;
 
-    const formData = new FormData(form);
-    const companyName = formData.get("company-name") as string;
-    const jobTitle = formData.get("job-title") as string;
-    const jobDescription = formData.get("job-description") as string;
+    const formData = new FormData(e.currentTarget);
+    const companyName = (formData.get("company-name") as string) || "";
+    const jobTitle = (formData.get("job-title") as string) || "";
+    const jobDescription = (formData.get("job-description") as string) || "";
 
-    if (!file) return;
+    if (!jobTitle.trim() || !jobDescription.trim()) {
+      setStatusText("Add a job title and description so the feedback is personalized.");
+      return;
+    }
 
     handleAnalyze({
       companyName,
@@ -109,63 +137,136 @@ const Upload = () => {
   };
 
   return (
-    <main className="bg-[url('/images/bg-main.svg')] bg-cover">
+    <main className="relative overflow-hidden">
+      <div className="hero-decor" aria-hidden="true" />
       <Navbar />
 
-      <section className="main-section">
-        <div className="page-heading py-16">
-          <h1>Get personalized feedback for your dream job</h1>
-          {isProcessing ? (
-            <>
-              <h2>{statusText}</h2>
-              <img src="/images/resume-scan.gif" className="w-full" />
-            </>
-          ) : (
-            <h2>Upload your resume and we'll show you exactly how to improve it</h2>
-          )}
-          {!isProcessing && (
-            <form
-              id="upload-form"
-              onSubmit={handleSubmit}
-              className="flex flex-col gap-4 mt-8"
-            >
-              <div className="form-div">
-                <label htmlFor="company-name">Company Name</label>
+      <section className="page-shell gap-16">
+        <header className="flex flex-col gap-6 max-w-3xl">
+          <span className="section-eyebrow">Upload & analyze</span>
+          <h1 className="headline">Get personalized feedback for your dream job</h1>
+          <p className="subheadline">
+            Provide the role you are targeting and we will return ATS-aligned coaching, actionable
+            next steps, and a visual preview in seconds.
+          </p>
+        </header>
+
+        <div className="grid gap-10 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)]">
+          <form
+            id="upload-form"
+            onSubmit={handleSubmit}
+            className="form-panel surface-card surface-card--tight"
+            aria-describedby="upload-status"
+          >
+            <div className="form-panel__grid">
+              <div className="input-wrapper">
+                <label htmlFor="company-name" className="input-label">
+                  Company name
+                </label>
                 <input
                   type="text"
                   name="company-name"
-                  placeholder="Company Name"
                   id="company-name"
+                  placeholder="e.g. Aurora Labs"
+                  className="input-field"
+                  disabled={isProcessing}
                 />
               </div>
-              <div className="form-div">
-                <label htmlFor="job-title">Job Title</label>
+              <div className="input-wrapper">
+                <label htmlFor="job-title" className="input-label required">
+                  Job title
+                </label>
                 <input
                   type="text"
                   name="job-title"
-                  placeholder="Job Title"
                   id="job-title"
+                  placeholder="e.g. Senior Product Designer"
+                  className="input-field"
+                  required
+                  disabled={isProcessing}
                 />
               </div>
-              <div className="form-div">
-                <label htmlFor="job-description">Job Description</label>
-                <textarea
-                  rows={5}
-                  name="job-description"
-                  placeholder="Job Description"
-                  id="job-description"
-                />
-              </div>
-              <div className="form-div">
-                <label htmlFor="uploader">Upload Resume</label>
-                <FileUploader onFileSelect={handleFileSelect} />
-              </div>
+            </div>
 
-              <button className="primary-button" type="submit">
-                Analyze Resume
+            <div className="input-wrapper">
+              <label htmlFor="job-description" className="input-label required">
+                Job description
+              </label>
+              <textarea
+                rows={6}
+                name="job-description"
+                id="job-description"
+                placeholder="Paste the most important responsibilities and requirements"
+                className="textarea-field"
+                required
+                disabled={isProcessing}
+              />
+            </div>
+
+            <div className="input-wrapper">
+              <label className="input-label required" htmlFor="resume-upload">
+                Resume PDF
+              </label>
+              <FileUploader onFileSelect={handleFileSelect} />
+              <p className="text-xs text-slate-500">
+                We store your file securely in your Puter drive so you can revisit the analysis
+                later.
+              </p>
+            </div>
+
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+              <button
+                className="primary-button"
+                type="submit"
+                disabled={isProcessing || !file}
+              >
+                {isProcessing ? "Analyzing..." : "Analyze resume"}
               </button>
-            </form>
-          )}
+              <span className="text-xs text-slate-500">
+                {file ? "Ready to analyze" : "Select a PDF to enable analysis"}
+              </span>
+            </div>
+          </form>
+
+          <aside className="surface-card surface-card--tight flex h-full min-h-[420px] flex-col gap-6" aria-live="polite">
+            <div className="flex flex-1 flex-col">
+              {isProcessing ? (
+                <div className="flex flex-1 flex-col gap-4 text-center">
+                  <div className="flex flex-1 items-center justify-center overflow-hidden rounded-3xl bg-indigo-50/70 p-6">
+                    <img
+                      src="/images/resume-scan.gif"
+                      alt="Analyzing resume"
+                      className="h-full w-full max-h-[420px] object-contain"
+                    />
+                  </div>
+                  <p className="text-sm text-slate-600">
+                    Keep this tab open. We will redirect you once the analysis is complete.
+                  </p>
+                </div>
+              ) : (
+                <div className="space-y-4 text-sm text-slate-600">
+                  <h2 className="text-base font-semibold text-slate-900">Before you upload</h2>
+                  <ul className="space-y-3">
+                    {checklist.map((item) => (
+                      <li
+                        key={item.title}
+                        className="rounded-2xl border border-slate-100 bg-white/90 px-4 py-3"
+                      >
+                        <p className="font-semibold text-slate-800">{item.title}</p>
+                        <p>{item.description}</p>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </div>
+            <p
+              id="upload-status"
+              className="mt-auto text-sm font-semibold text-indigo-600 text-center"
+            >
+              {statusText}
+            </p>
+          </aside>
         </div>
       </section>
     </main>
@@ -173,3 +274,4 @@ const Upload = () => {
 };
 
 export default Upload;
+

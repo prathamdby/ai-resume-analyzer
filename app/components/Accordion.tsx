@@ -1,4 +1,4 @@
-import type { ReactNode } from "react";
+﻿import type { ReactNode } from "react";
 import React, { createContext, useContext, useState } from "react";
 import { cn } from "~/lib/utils";
 
@@ -8,9 +8,7 @@ interface AccordionContextType {
   isItemActive: (id: string) => boolean;
 }
 
-const AccordionContext = createContext<AccordionContextType | undefined>(
-  undefined,
-);
+const AccordionContext = createContext<AccordionContextType | undefined>(undefined);
 
 const useAccordion = () => {
   const context = useContext(AccordionContext);
@@ -33,29 +31,22 @@ export const Accordion: React.FC<AccordionProps> = ({
   allowMultiple = false,
   className = "",
 }) => {
-  const [activeItems, setActiveItems] = useState<string[]>(
-    defaultOpen ? [defaultOpen] : [],
-  );
+  const [activeItems, setActiveItems] = useState<string[]>(defaultOpen ? [defaultOpen] : []);
 
   const toggleItem = (id: string) => {
     setActiveItems((prev) => {
       if (allowMultiple) {
-        return prev.includes(id)
-          ? prev.filter((item) => item !== id)
-          : [...prev, id];
-      } else {
-        return prev.includes(id) ? [] : [id];
+        return prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id];
       }
+      return prev.includes(id) ? [] : [id];
     });
   };
 
   const isItemActive = (id: string) => activeItems.includes(id);
 
   return (
-    <AccordionContext.Provider
-      value={{ activeItems, toggleItem, isItemActive }}
-    >
-      <div className={`space-y-2 ${className}`}>{children}</div>
+    <AccordionContext.Provider value={{ activeItems, toggleItem, isItemActive }}>
+      <div className={cn("space-y-3", className)}>{children}</div>
     </AccordionContext.Provider>
   );
 };
@@ -66,13 +57,19 @@ interface AccordionItemProps {
   className?: string;
 }
 
-export const AccordionItem: React.FC<AccordionItemProps> = ({
-  id,
-  children,
-  className = "",
-}) => {
+export const AccordionItem: React.FC<AccordionItemProps> = ({ id, children, className = "" }) => {
+  const { isItemActive } = useAccordion();
+  const active = isItemActive(id);
+
   return (
-    <div className={`overflow-hidden border-b border-gray-200 ${className}`}>
+    <div
+      data-active={active}
+      className={cn(
+        "overflow-hidden rounded-3xl border border-white/70 bg-white/90 shadow-[var(--shadow-ring)] transition-all duration-200",
+        active ? "shadow-[0_22px_45px_-30px_rgba(99,102,241,0.35)]" : "",
+        className,
+      )}
+    >
       {children}
     </div>
   );
@@ -95,41 +92,35 @@ export const AccordionHeader: React.FC<AccordionHeaderProps> = ({
 }) => {
   const { toggleItem, isItemActive } = useAccordion();
   const isActive = isItemActive(itemId);
+  const contentId = `${itemId}-content`;
+  const headerId = `${itemId}-header`;
 
   const defaultIcon = (
     <svg
-      className={cn("w-5 h-5 transition-transform duration-200", {
-        "rotate-180": isActive,
-      })}
+      className={cn("h-4 w-4 transition-transform duration-200", { "rotate-180": isActive })}
       fill="none"
-      stroke="#98A2B3"
+      stroke="#334155"
       viewBox="0 0 24 24"
       xmlns="http://www.w3.org/2000/svg"
+      aria-hidden="true"
     >
-      <path
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        strokeWidth={2}
-        d="M19 9l-7 7-7-7"
-      />
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.6} d="M6 9l6 6 6-6" />
     </svg>
   );
 
-  const handleClick = () => {
-    toggleItem(itemId);
-  };
-
   return (
     <button
-      onClick={handleClick}
-      className={`
-        w-full px-4 py-3 text-left
-        focus:outline-none
-        transition-colors duration-200 flex items-center justify-between cursor-pointer
-        ${className}
-      `}
+      type="button"
+      id={headerId}
+      onClick={() => toggleItem(itemId)}
+      className={cn(
+        "flex w-full items-center justify-between gap-4 px-6 py-4 text-left text-sm font-medium text-slate-700 hover:bg-slate-50/60",
+        className,
+      )}
+      aria-expanded={isActive}
+      aria-controls={contentId}
     >
-      <div className="flex items-center space-x-3">
+      <div className="flex flex-1 items-center gap-3">
         {iconPosition === "left" && (icon || defaultIcon)}
         <div className="flex-1">{children}</div>
       </div>
@@ -151,16 +142,20 @@ export const AccordionContent: React.FC<AccordionContentProps> = ({
 }) => {
   const { isItemActive } = useAccordion();
   const isActive = isItemActive(itemId);
+  const contentId = `${itemId}-content`;
+  const headerId = `${itemId}-header`;
 
   return (
     <div
-      className={`
-        overflow-hidden transition-all duration-300 ease-in-out
-        ${isActive ? "max-h-fit opacity-100" : "max-h-0 opacity-0"}
-        ${className}
-      `}
+      id={contentId}
+      role="region"
+      aria-labelledby={headerId}
+      className={cn(
+        "grid transition-all duration-300 ease-in-out",
+        isActive ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0",
+      )}
     >
-      <div className="px-4 py-3 ">{children}</div>
+      <div className={cn("overflow-hidden px-6 pb-6", className)}>{children}</div>
     </div>
   );
 };

@@ -1,4 +1,4 @@
-import React from "react";
+import ScoreBadge from "./ScoreBadge";
 
 interface Suggestion {
   type: "good" | "improve";
@@ -10,81 +10,80 @@ interface ATSProps {
   suggestions: Suggestion[];
 }
 
+const getSubtitle = (score: number) => {
+  if (score >= 80) return "Great job!";
+  if (score >= 60) return "Almost there";
+  if (score >= 40) return "Good start";
+  return "Needs more focus";
+};
+
 const ATS: React.FC<ATSProps> = ({ score, suggestions }) => {
-  // Determine background gradient based on score
-  const gradientClass =
-    score > 69
-      ? "from-green-100"
-      : score > 49
-        ? "from-yellow-100"
-        : "from-red-100";
-
-  // Determine icon based on score
-  const iconSrc =
-    score > 69
-      ? "/icons/ats-good.svg"
-      : score > 49
-        ? "/icons/ats-warning.svg"
-        : "/icons/ats-bad.svg";
-
-  // Determine subtitle based on score
-  const subtitle =
-    score > 69 ? "Great Job!" : score > 49 ? "Good Start" : "Needs Improvement";
+  const normalizedScore = Math.max(0, Math.min(score, 100));
+  const subtitle = getSubtitle(normalizedScore);
 
   return (
-    <div
-      className={`bg-gradient-to-b ${gradientClass} to-white rounded-2xl shadow-md w-full p-6`}
-    >
-      {/* Top section with icon and headline */}
-      <div className="flex items-center gap-4 mb-6">
-        <img src={iconSrc} alt="ATS Score Icon" className="w-12 h-12" />
-        <div>
-          <h2 className="text-2xl font-bold">ATS Score: {score}/100</h2>
+    <section className="ats-panel surface-card">
+      <div className="ats-panel__header">
+        <div className="flex items-center gap-4">
+          <span className="inline-flex size-12 items-center justify-center rounded-2xl bg-indigo-100 text-sm font-semibold uppercase tracking-[0.24em] text-indigo-600">
+            ATS
+          </span>
+          <div>
+            <h2 className="text-xl font-semibold text-slate-900">ATS readiness</h2>
+            <p className="text-sm text-slate-600">{subtitle}</p>
+          </div>
         </div>
+        <ScoreBadge score={normalizedScore} />
       </div>
 
-      {/* Description section */}
-      <div className="mb-6">
-        <h3 className="text-xl font-semibold mb-2">{subtitle}</h3>
-        <p className="text-gray-600 mb-4">
-          This score shows how well your resume will perform with the automated
-          systems that employers use to screen applications.
+      <div className="space-y-4">
+        <div className="h-3 w-full overflow-hidden rounded-full bg-slate-100">
+          <div
+            className="h-full rounded-full bg-gradient-to-r from-indigo-500 via-indigo-400 to-pink-400 transition-all duration-500"
+            style={{ width: `${normalizedScore}%` }}
+            aria-hidden="true"
+          />
+        </div>
+        <p className="text-sm text-slate-600">
+          This score estimates how parser-friendly your resume is for automated tracking systems. Aim
+          for 80 or above to maximize visibility in recruiter dashboards.
         </p>
-
-        {/* Suggestions list */}
-        <div className="space-y-3">
-          {suggestions.map((suggestion, index) => (
-            <div key={index} className="flex items-start gap-3">
-              <img
-                src={
-                  suggestion.type === "good"
-                    ? "/icons/check.svg"
-                    : "/icons/warning.svg"
-                }
-                alt={suggestion.type === "good" ? "Check" : "Warning"}
-                className="w-5 h-5 mt-1"
-              />
-              <p
-                className={
-                  suggestion.type === "good"
-                    ? "text-green-700"
-                    : "text-amber-700"
-                }
-              >
-                {suggestion.tip}
-              </p>
-            </div>
-          ))}
-        </div>
       </div>
 
-      {/* Closing encouragement */}
-      <p className="text-gray-700 italic">
-        Keep improving your resume to boost your chances of reaching real people
-        who make hiring decisions.
-      </p>
-    </div>
+      <div className="space-y-4">
+        <h3 className="text-sm font-semibold uppercase tracking-[0.28em] text-indigo-500">
+          Recommendations
+        </h3>
+        <ul className="space-y-3">
+          {suggestions.map((suggestion, index) => (
+            <li
+              key={`${suggestion.type}-${index}`}
+              className="flex items-start gap-3 rounded-2xl border border-slate-100 bg-white/90 px-4 py-3"
+            >
+              <span
+                className={`inline-flex size-9 shrink-0 items-center justify-center rounded-full ${suggestion.type === "good" ? "bg-green-100" : "bg-amber-100"}`}
+              >
+                <img
+                  src={suggestion.type === "good" ? "/icons/check.svg" : "/icons/warning.svg"}
+                  alt={suggestion.type === "good" ? "Positive signal" : "Needs refinement"}
+                  className="h-5 w-5"
+                />
+              </span>
+              <p className="text-sm text-slate-600">{suggestion.tip}</p>
+            </li>
+          ))}
+        </ul>
+        {suggestions.length === 0 && (
+          <p className="text-sm text-slate-600">
+            No suggestions yet. Re-run the analysis after applying updates to see how your ATS score
+            responds.
+          </p>
+        )}
+      </div>
+    </section>
   );
 };
 
 export default ATS;
+
+
