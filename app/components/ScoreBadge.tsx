@@ -36,7 +36,7 @@ const ScoreBadge: React.FC<ScoreBadgeProps> = ({
         "score-badge",
         background,
         textClass,
-        size === "sm" ? "px-2 py-1 text-xs" : "px-3 py-1 text-sm"
+        size === "sm" ? "px-2 py-1 text-xs" : "px-3 py-1 text-sm",
       )}
       aria-label={`Score ${score} out of 100, ${label}`}
     >
@@ -44,7 +44,9 @@ const ScoreBadge: React.FC<ScoreBadgeProps> = ({
       {showScore && (
         <span className="font-semibold text-slate-900/70">
           {score}
-          <span className="text-[11px] font-medium uppercase text-slate-500">/100</span>
+          <span className="text-[11px] font-medium uppercase text-slate-500">
+            /100
+          </span>
         </span>
       )}
     </span>

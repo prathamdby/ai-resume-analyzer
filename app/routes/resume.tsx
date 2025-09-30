@@ -17,7 +17,10 @@ const Resume = () => {
   const [imageUrl, setImageUrl] = useState<string | null>(null);
   const [resumeUrl, setResumeUrl] = useState<string | null>(null);
   const [feedback, setFeedback] = useState<Feedback | null>(null);
-  const [meta, setMeta] = useState<{ companyName?: string; jobTitle?: string } | null>(null);
+  const [meta, setMeta] = useState<{
+    companyName?: string;
+    jobTitle?: string;
+  } | null>(null);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -108,8 +111,8 @@ const Resume = () => {
                 )}
               </div>
               <p className="text-xs text-slate-500">
-                The preview reflects the PDF uploaded to Puter. Download directly to review
-                formatting before sending to recruiters.
+                The preview reflects the PDF uploaded to Puter. Download
+                directly to review formatting before sending to recruiters.
               </p>
             </div>
           </aside>
@@ -118,7 +121,10 @@ const Resume = () => {
             {feedback ? (
               <div className="flex flex-col gap-8">
                 <Summary feedback={feedback} />
-                <ATS score={feedback.ATS.score || 0} suggestions={feedback.ATS.tips || []} />
+                <ATS
+                  score={feedback.ATS.score || 0}
+                  suggestions={feedback.ATS.tips || []}
+                />
                 <Details feedback={feedback} />
               </div>
             ) : (
@@ -131,7 +137,8 @@ const Resume = () => {
                   />
                 </div>
                 <p className="mt-auto text-sm text-slate-600">
-                  We are finishing up the analysis. This usually takes less than a minute.
+                  We are finishing up the analysis. This usually takes less than
+                  a minute.
                 </p>
               </div>
             )}

@@ -24,15 +24,24 @@ const Auth = () => {
       <section className="page-shell">
         <div className="mx-auto flex w-full max-w-lg flex-col gap-8 text-center">
           <span className="section-eyebrow mx-auto">Welcome back</span>
-          <h1 className="headline text-4xl">Sign in to continue your career journey</h1>
+          <h1 className="headline text-4xl">
+            Sign in to continue your career journey
+          </h1>
           <p className="subheadline">
-            Connect your Puter account to save resume versions, store analyses, and pick up where you
-            left off.
+            Connect your Puter account to save resume versions, store analyses,
+            and pick up where you left off.
           </p>
 
           <div className="surface-card surface-card--tight space-y-6">
-            <p className="text-sm font-semibold text-indigo-600" aria-live="polite">
-              {isLoading ? "Checking your session..." : auth.isAuthenticated ? "You are signed in." : "You are signed out."}
+            <p
+              className="text-sm font-semibold text-indigo-600"
+              aria-live="polite"
+            >
+              {isLoading
+                ? "Checking your session..."
+                : auth.isAuthenticated
+                  ? "You are signed in."
+                  : "You are signed out."}
             </p>
             <div className="flex flex-col gap-4">
               {isLoading ? (
@@ -40,7 +49,10 @@ const Auth = () => {
                   Preparing sign-in
                 </button>
               ) : auth.isAuthenticated ? (
-                <button className="primary-button primary-button--ghost" onClick={auth.signOut}>
+                <button
+                  className="primary-button primary-button--ghost"
+                  onClick={auth.signOut}
+                >
                   Sign out of Puter
                 </button>
               ) : (
@@ -50,7 +62,8 @@ const Auth = () => {
               )}
             </div>
             <p className="text-xs text-slate-500">
-              Need to switch accounts? Sign out first, then sign in with your preferred Puter login.
+              Need to switch accounts? Sign out first, then sign in with your
+              preferred Puter login.
             </p>
           </div>
         </div>

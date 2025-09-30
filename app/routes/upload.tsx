@@ -10,15 +10,18 @@ import { generateUUID } from "~/lib/utils";
 const checklist = [
   {
     title: "Tailor to the role",
-    description: "Share the job title and paste the job description to unlock targeted advice.",
+    description:
+      "Share the job title and paste the job description to unlock targeted advice.",
   },
   {
     title: "Upload a clean PDF",
-    description: "Use a single-column layout with clear headings for the best ATS results.",
+    description:
+      "Use a single-column layout with clear headings for the best ATS results.",
   },
   {
     title: "Iterate quickly",
-    description: "Re-run analyses after updates to track progress and lift your score.",
+    description:
+      "Re-run analyses after updates to track progress and lift your score.",
   },
 ];
 
@@ -124,7 +127,9 @@ const Upload = () => {
     const jobDescription = (formData.get("job-description") as string) || "";
 
     if (!jobTitle.trim() || !jobDescription.trim()) {
-      setStatusText("Add a job title and description so the feedback is personalized.");
+      setStatusText(
+        "Add a job title and description so the feedback is personalized.",
+      );
       return;
     }
 
@@ -144,10 +149,12 @@ const Upload = () => {
       <section className="page-shell gap-16">
         <header className="flex flex-col gap-6 max-w-3xl">
           <span className="section-eyebrow">Upload & analyze</span>
-          <h1 className="headline">Get personalized feedback for your dream job</h1>
+          <h1 className="headline">
+            Get personalized feedback for your dream job
+          </h1>
           <p className="subheadline">
-            Provide the role you are targeting and we will return ATS-aligned coaching, actionable
-            next steps, and a visual preview in seconds.
+            Provide the role you are targeting and we will return ATS-aligned
+            coaching, actionable next steps, and a visual preview in seconds.
           </p>
         </header>
 
@@ -209,8 +216,8 @@ const Upload = () => {
               </label>
               <FileUploader onFileSelect={handleFileSelect} />
               <p className="text-xs text-slate-500">
-                We store your file securely in your Puter drive so you can revisit the analysis
-                later.
+                We store your file securely in your Puter drive so you can
+                revisit the analysis later.
               </p>
             </div>
 
@@ -228,7 +235,10 @@ const Upload = () => {
             </div>
           </form>
 
-          <aside className="surface-card surface-card--tight flex h-full min-h-[420px] flex-col gap-6" aria-live="polite">
+          <aside
+            className="surface-card surface-card--tight flex h-full min-h-[420px] flex-col gap-6"
+            aria-live="polite"
+          >
             <div className="flex flex-1 flex-col">
               {isProcessing ? (
                 <div className="flex flex-1 flex-col gap-4 text-center">
@@ -240,19 +250,24 @@ const Upload = () => {
                     />
                   </div>
                   <p className="text-sm text-slate-600">
-                    Keep this tab open. We will redirect you once the analysis is complete.
+                    Keep this tab open. We will redirect you once the analysis
+                    is complete.
                   </p>
                 </div>
               ) : (
                 <div className="space-y-4 text-sm text-slate-600">
-                  <h2 className="text-base font-semibold text-slate-900">Before you upload</h2>
+                  <h2 className="text-base font-semibold text-slate-900">
+                    Before you upload
+                  </h2>
                   <ul className="space-y-3">
                     {checklist.map((item) => (
                       <li
                         key={item.title}
                         className="rounded-2xl border border-slate-100 bg-white/90 px-4 py-3"
                       >
-                        <p className="font-semibold text-slate-800">{item.title}</p>
+                        <p className="font-semibold text-slate-800">
+                          {item.title}
+                        </p>
                         <p>{item.description}</p>
                       </li>
                     ))}
@@ -274,4 +289,3 @@ const Upload = () => {
 };
 
 export default Upload;
-

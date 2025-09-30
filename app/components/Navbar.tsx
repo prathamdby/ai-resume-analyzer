@@ -28,7 +28,7 @@ const Navbar = () => {
               "rounded-full px-4 py-2 text-sm font-medium",
               isHome
                 ? "bg-slate-900 text-white shadow-sm"
-                : "text-slate-600 hover:text-slate-900"
+                : "text-slate-600 hover:text-slate-900",
             )}
           >
             My Resumes
@@ -39,7 +39,7 @@ const Navbar = () => {
               "rounded-full px-4 py-2 text-sm font-medium",
               isUpload
                 ? "bg-indigo-100 text-indigo-700"
-                : "text-slate-600 hover:text-slate-900"
+                : "text-slate-600 hover:text-slate-900",
             )}
           >
             Upload

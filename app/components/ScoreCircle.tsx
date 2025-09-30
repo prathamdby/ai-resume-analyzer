@@ -6,12 +6,24 @@ const ScoreCircle = ({ score = 75 }: { score: number }) => {
   const normalizedRadius = radius - stroke / 2;
   const circumference = 2 * Math.PI * normalizedRadius;
   const progress = Math.max(0, Math.min(score, 100)) / 100;
-  const strokeDashoffset = useMemo(() => circumference * (1 - progress), [circumference, progress]);
+  const strokeDashoffset = useMemo(
+    () => circumference * (1 - progress),
+    [circumference, progress],
+  );
   const gradientId = useId();
 
   return (
-    <div className="relative h-[110px] w-[110px]" role="img" aria-label={`Overall score ${score} out of 100`}>
-      <svg height="100%" width="100%" viewBox="0 0 120 120" className="-rotate-90 transform">
+    <div
+      className="relative h-[110px] w-[110px]"
+      role="img"
+      aria-label={`Overall score ${score} out of 100`}
+    >
+      <svg
+        height="100%"
+        width="100%"
+        viewBox="0 0 120 120"
+        className="-rotate-90 transform"
+      >
         <defs>
           <linearGradient id={gradientId} x1="1" y1="0" x2="0" y2="1">
             <stop offset="0%" stopColor="#8b5cf6" />
@@ -41,8 +53,12 @@ const ScoreCircle = ({ score = 75 }: { score: number }) => {
         />
       </svg>
       <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center gap-1">
-        <span className="text-xs font-medium uppercase tracking-[0.32em] text-slate-400 leading-none">Score</span>
-        <span className="text-2xl font-semibold leading-none text-slate-900">{score}</span>
+        <span className="text-xs font-medium uppercase tracking-[0.32em] text-slate-400 leading-none">
+          Score
+        </span>
+        <span className="text-2xl font-semibold leading-none text-slate-900">
+          {score}
+        </span>
         <span className="text-[11px] font-medium uppercase tracking-[0.3em] text-slate-400 leading-none">
           /100
         </span>
@@ -52,4 +68,3 @@ const ScoreCircle = ({ score = 75 }: { score: number }) => {
 };
 
 export default ScoreCircle;
-

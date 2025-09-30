@@ -14,7 +14,11 @@ const ScoreGauge = ({ score = 75 }: { score: number }) => {
 
   return (
     <div className="surface-card flex flex-col items-center gap-4 bg-gradient-to-b from-indigo-50/70 via-white to-white">
-      <div className="relative h-28 w-56" role="img" aria-label={`Overall resume score ${score} out of 100`}>
+      <div
+        className="relative h-28 w-56"
+        role="img"
+        aria-label={`Overall resume score ${score} out of 100`}
+      >
         <svg viewBox="0 0 100 60" className="h-full w-full">
           <defs>
             <linearGradient id={gradientId} x1="0%" y1="0%" x2="100%" y2="0%">
@@ -45,19 +49,20 @@ const ScoreGauge = ({ score = 75 }: { score: number }) => {
           <span className="text-xs font-semibold uppercase tracking-[0.32em] text-slate-400 leading-none">
             Overall
           </span>
-          <span className="text-3xl font-semibold leading-none text-slate-900">{score}</span>
+          <span className="text-3xl font-semibold leading-none text-slate-900">
+            {score}
+          </span>
           <span className="text-[11px] font-medium uppercase tracking-[0.28em] text-slate-400 leading-none">
             /100
           </span>
         </div>
       </div>
       <p className="max-w-xs text-center text-sm text-slate-600">
-        This gauge blends tone, content, structure, and skills into a single confidence score for
-        your current iteration.
+        This gauge blends tone, content, structure, and skills into a single
+        confidence score for your current iteration.
       </p>
     </div>
   );
 };
 
 export default ScoreGauge;
-

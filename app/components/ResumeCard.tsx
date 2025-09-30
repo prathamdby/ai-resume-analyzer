@@ -76,7 +76,9 @@ const ResumeCard = ({
         <div className="gradient-border resume-card__preview">
           <img
             src={resumeUrl}
-            alt={companyName ? `${companyName} resume preview` : "Resume preview"}
+            alt={
+              companyName ? `${companyName} resume preview` : "Resume preview"
+            }
             className="h-[320px] w-full object-cover object-top"
           />
         </div>
@@ -95,8 +97,12 @@ const ResumeCard = ({
                 key={`${id}-${category.label}`}
                 className="flex items-center justify-between gap-3 rounded-2xl bg-indigo-50/40 px-3 py-2 text-slate-600"
               >
-                <span className="text-sm font-medium text-slate-700">{category.label}</span>
-                <span className="text-sm font-semibold text-slate-900">{category.score}</span>
+                <span className="text-sm font-medium text-slate-700">
+                  {category.label}
+                </span>
+                <span className="text-sm font-semibold text-slate-900">
+                  {category.score}
+                </span>
               </li>
             ))}
           </ul>
@@ -126,7 +132,3 @@ const ResumeCard = ({
 };
 
 export default ResumeCard;
-
-
-
-

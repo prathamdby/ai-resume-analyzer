@@ -43,9 +43,14 @@ const WipeApp = () => {
         <Navbar />
         <section className="page-shell">
           <div className="surface-card surface-card--tight space-y-4">
-            <h1 className="text-2xl font-semibold text-red-600">We ran into an issue</h1>
+            <h1 className="text-2xl font-semibold text-red-600">
+              We ran into an issue
+            </h1>
             <p className="text-sm text-slate-600">{String(error)}</p>
-            <button className="primary-button primary-button--ghost" onClick={clearError}>
+            <button
+              className="primary-button primary-button--ghost"
+              onClick={clearError}
+            >
               Try again
             </button>
           </div>
@@ -73,16 +78,20 @@ const WipeApp = () => {
       <section className="page-shell gap-12">
         <header className="flex flex-col gap-3">
           <span className="section-eyebrow w-fit">Maintenance</span>
-          <h1 className="text-4xl font-semibold text-slate-900 sm:text-5xl">Manage your stored files</h1>
+          <h1 className="text-4xl font-semibold text-slate-900 sm:text-5xl">
+            Manage your stored files
+          </h1>
           <p className="text-base text-slate-600">
-            Remove generated resumes, previews, or cached data from your Puter workspace with a
-            single action.
+            Remove generated resumes, previews, or cached data from your Puter
+            workspace with a single action.
           </p>
         </header>
 
         <div className="grid gap-8 lg:grid-cols-[minmax(0,0.8fr)_minmax(0,1.2fr)]">
           <aside className="surface-card surface-card--tight space-y-4">
-            <h2 className="text-base font-semibold text-slate-900">Account overview</h2>
+            <h2 className="text-base font-semibold text-slate-900">
+              Account overview
+            </h2>
             <dl className="space-y-2 text-sm text-slate-600">
               <div className="flex items-center justify-between">
                 <dt className="font-medium text-slate-700">User</dt>
@@ -101,25 +110,34 @@ const WipeApp = () => {
               {isClearing ? "Clearing..." : "Wipe stored data"}
             </button>
             <p className="text-xs text-slate-500">
-              The wipe removes generated previews and feedback stored in Puter. Your resume analyses
-              will need to be re-run afterward.
+              The wipe removes generated previews and feedback stored in Puter.
+              Your resume analyses will need to be re-run afterward.
             </p>
           </aside>
 
           <section className="surface-card surface-card--tight space-y-4">
             <div className="flex items-center justify-between">
-              <h2 className="text-base font-semibold text-slate-900">Workspace files</h2>
+              <h2 className="text-base font-semibold text-slate-900">
+                Workspace files
+              </h2>
               <span className="text-xs font-semibold uppercase tracking-[0.28em] text-slate-400">
                 {files.length} items
               </span>
             </div>
             {files.length === 0 ? (
-              <p className="text-sm text-slate-600">No stored files found. You are all clear!</p>
+              <p className="text-sm text-slate-600">
+                No stored files found. You are all clear!
+              </p>
             ) : (
               <ul className="divide-y divide-slate-100 text-sm text-slate-600">
                 {files.map((file) => (
-                  <li key={file.id} className="flex items-center justify-between py-2">
-                    <span className="font-medium text-slate-700">{file.name}</span>
+                  <li
+                    key={file.id}
+                    className="flex items-center justify-between py-2"
+                  >
+                    <span className="font-medium text-slate-700">
+                      {file.name}
+                    </span>
                     <span className="text-xs uppercase tracking-[0.28em] text-slate-400">
                       {file.type}
                     </span>

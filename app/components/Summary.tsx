@@ -52,10 +52,12 @@ const Summary = ({ feedback }: { feedback: Feedback }) => {
       <div className="flex flex-col gap-6 lg:flex-row">
         <ScoreGauge score={feedback.overallScore} />
         <div className="flex flex-1 flex-col justify-center gap-4">
-          <h2 className="text-2xl font-semibold text-slate-900">Your resume performance</h2>
+          <h2 className="text-2xl font-semibold text-slate-900">
+            Your resume performance
+          </h2>
           <p className="text-sm text-slate-600">
-            Each category below contributes to the overall score. Improve the weakest areas first to
-            unlock the fastest progress.
+            Each category below contributes to the overall score. Improve the
+            weakest areas first to unlock the fastest progress.
           </p>
         </div>
       </div>
@@ -67,7 +69,9 @@ const Summary = ({ feedback }: { feedback: Feedback }) => {
             className="flex flex-col gap-3 rounded-3xl border border-slate-100 bg-white/90 px-5 py-4 shadow-[var(--shadow-ring)]"
           >
             <div className="flex items-center justify-between">
-              <p className="text-base font-semibold text-slate-900">{category.title}</p>
+              <p className="text-base font-semibold text-slate-900">
+                {category.title}
+              </p>
               <ScoreBadge score={category.score} size="sm" />
             </div>
             <p className="text-sm text-slate-600">
@@ -81,4 +85,3 @@ const Summary = ({ feedback }: { feedback: Feedback }) => {
 };
 
 export default Summary;
-

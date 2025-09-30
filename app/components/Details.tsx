@@ -7,7 +7,13 @@ import {
 } from "./Accordion";
 import ScoreBadge from "./ScoreBadge";
 
-const CategoryHeader = ({ title, categoryScore }: { title: string; categoryScore: number }) => {
+const CategoryHeader = ({
+  title,
+  categoryScore,
+}: {
+  title: string;
+  categoryScore: number;
+}) => {
   return (
     <div className="flex flex-wrap items-center justify-between gap-3">
       <div className="flex items-center gap-3">
@@ -29,8 +35,8 @@ const CategoryContent = ({
   if (!tips || tips.length === 0) {
     return (
       <p className="text-sm text-slate-600">
-        No recommendations were generated for this category yet. Re-run the analysis to refresh the
-        guidance.
+        No recommendations were generated for this category yet. Re-run the
+        analysis to refresh the guidance.
       </p>
     );
   }
@@ -50,8 +56,16 @@ const CategoryContent = ({
               )}
             >
               <img
-                src={tip.type === "good" ? "/icons/check.svg" : "/icons/warning.svg"}
-                alt={tip.type === "good" ? "Positive insight" : "Improvement suggested"}
+                src={
+                  tip.type === "good"
+                    ? "/icons/check.svg"
+                    : "/icons/warning.svg"
+                }
+                alt={
+                  tip.type === "good"
+                    ? "Positive insight"
+                    : "Improvement suggested"
+                }
                 className="h-5 w-5"
               />
             </span>
@@ -70,16 +84,21 @@ const Details = ({ feedback }: { feedback: Feedback }) => {
   return (
     <section className="section-panel surface-card">
       <div className="flex flex-col gap-2">
-        <h2 className="text-2xl font-semibold text-slate-900">Detailed coaching</h2>
+        <h2 className="text-2xl font-semibold text-slate-900">
+          Detailed coaching
+        </h2>
         <p className="text-sm text-slate-600">
-          Expand each section to review what is working well and the edits that will unlock the next
-          score jump.
+          Expand each section to review what is working well and the edits that
+          will unlock the next score jump.
         </p>
       </div>
       <Accordion className="space-y-3" defaultOpen="tone-style" allowMultiple>
         <AccordionItem id="tone-style">
           <AccordionHeader itemId="tone-style">
-            <CategoryHeader title="Tone & Style" categoryScore={feedback.toneAndStyle.score} />
+            <CategoryHeader
+              title="Tone & Style"
+              categoryScore={feedback.toneAndStyle.score}
+            />
           </AccordionHeader>
           <AccordionContent itemId="tone-style">
             <CategoryContent tips={feedback.toneAndStyle.tips} />
@@ -87,7 +106,10 @@ const Details = ({ feedback }: { feedback: Feedback }) => {
         </AccordionItem>
         <AccordionItem id="content">
           <AccordionHeader itemId="content">
-            <CategoryHeader title="Content" categoryScore={feedback.content.score} />
+            <CategoryHeader
+              title="Content"
+              categoryScore={feedback.content.score}
+            />
           </AccordionHeader>
           <AccordionContent itemId="content">
             <CategoryContent tips={feedback.content.tips} />
@@ -95,7 +117,10 @@ const Details = ({ feedback }: { feedback: Feedback }) => {
         </AccordionItem>
         <AccordionItem id="structure">
           <AccordionHeader itemId="structure">
-            <CategoryHeader title="Structure" categoryScore={feedback.structure.score} />
+            <CategoryHeader
+              title="Structure"
+              categoryScore={feedback.structure.score}
+            />
           </AccordionHeader>
           <AccordionContent itemId="structure">
             <CategoryContent tips={feedback.structure.tips} />
@@ -103,7 +128,10 @@ const Details = ({ feedback }: { feedback: Feedback }) => {
         </AccordionItem>
         <AccordionItem id="skills">
           <AccordionHeader itemId="skills">
-            <CategoryHeader title="Skills" categoryScore={feedback.skills.score} />
+            <CategoryHeader
+              title="Skills"
+              categoryScore={feedback.skills.score}
+            />
           </AccordionHeader>
           <AccordionContent itemId="skills">
             <CategoryContent tips={feedback.skills.tips} />
@@ -115,5 +143,3 @@ const Details = ({ feedback }: { feedback: Feedback }) => {
 };
 
 export default Details;
-
-

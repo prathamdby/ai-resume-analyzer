@@ -9,7 +9,7 @@ An intelligent resume analysis platform that provides personalized feedback to h
 - 🎯 **Job-Specific Feedback** - Tailored analysis based on specific job descriptions and companies
 - 📈 **Detailed Scoring** - Comprehensive scoring across multiple categories:
   - Overall Performance Score
-  - ATS Compatibility 
+  - ATS Compatibility
   - Tone & Style
   - Content Quality
   - Structure & Layout
@@ -40,17 +40,20 @@ An intelligent resume analysis platform that provides personalized feedback to h
 ### Installation
 
 1. Clone the repository:
+
 ```bash
 git clone https://github.com/prathamdby/ai-resume-analyzer.git
 cd ai-resume-analyzer
 ```
 
 2. Install dependencies:
+
 ```bash
 npm install
 ```
 
 3. Start the development server:
+
 ```bash
 npm run dev
 ```
@@ -60,6 +63,7 @@ npm run dev
 ### Type Checking
 
 Run TypeScript type checking:
+
 ```bash
 npm run typecheck
 ```
@@ -115,6 +119,7 @@ The application can be deployed to any platform that supports Node.js applicatio
 ### Production Requirements
 
 Make sure to deploy the contents of the `build/` directory:
+
 ```
 ├── package.json
 ├── package-lock.json

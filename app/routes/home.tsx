@@ -9,7 +9,10 @@ import { usePuterStore } from "~/lib/puter";
 export function meta({}: Route.MetaArgs) {
   return [
     { title: "Resumind" },
-    { name: "description", content: "Get personalized feedback to land your dream job" },
+    {
+      name: "description",
+      content: "Get personalized feedback to land your dream job",
+    },
   ];
 }
 
@@ -47,7 +50,9 @@ export default function Home() {
 
       const items = (await kv.list("resume:*", true)) as KVItem[];
 
-      const parsedResumes = items?.map((resume) => JSON.parse(resume.value) as Resume);
+      const parsedResumes = items?.map(
+        (resume) => JSON.parse(resume.value) as Resume,
+      );
 
       setResumes(parsedResumes || []);
       setLoadingResumes(false);
@@ -76,13 +81,15 @@ export default function Home() {
       <section className="page-shell gap-20">
         <header className="grid gap-12 lg:grid-cols-[minmax(0,1.05fr)_minmax(0,0.9fr)] lg:items-start lg:gap-16">
           <div className="flex flex-col gap-8">
-            <span className="section-eyebrow">Confidence for every application</span>
+            <span className="section-eyebrow">
+              Confidence for every application
+            </span>
             <h1 className="headline">
               Track your resume performance and land the interview sooner
             </h1>
             <p className="subheadline">
-              Resumind analyzes each submission, highlights what is working, and gives you the
-              playbook to tailor your next iteration in minutes.
+              Resumind analyzes each submission, highlights what is working, and
+              gives you the playbook to tailor your next iteration in minutes.
             </p>
 
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
@@ -98,7 +105,10 @@ export default function Home() {
             </div>
           </div>
 
-          <aside className="surface-card space-y-6 self-start" aria-live="polite">
+          <aside
+            className="surface-card space-y-6 self-start"
+            aria-live="polite"
+          >
             <div className="flex items-center justify-between gap-4">
               <div>
                 <p className="text-sm font-semibold uppercase tracking-[0.3em] text-indigo-500">
@@ -108,7 +118,8 @@ export default function Home() {
                   {featuredResume?.companyName || "Your next role"}
                 </p>
                 <p className="text-sm text-slate-500">
-                  {featuredResume?.jobTitle || "Run an analysis to see tailored advice"}
+                  {featuredResume?.jobTitle ||
+                    "Run an analysis to see tailored advice"}
                 </p>
               </div>
               {featuredScore !== undefined && (
@@ -116,29 +127,37 @@ export default function Home() {
                   <span className="text-xs font-semibold uppercase tracking-widest text-indigo-500">
                     Overall score
                   </span>
-                  <span className="text-3xl font-semibold text-slate-900">{featuredScore}</span>
+                  <span className="text-3xl font-semibold text-slate-900">
+                    {featuredScore}
+                  </span>
                 </div>
               )}
             </div>
 
             <div className="grid gap-4 text-sm text-slate-600">
               <div className="rounded-2xl border border-indigo-100/70 bg-indigo-50/40 px-4 py-3">
-                <p className="font-semibold text-indigo-700">Actionable feedback</p>
+                <p className="font-semibold text-indigo-700">
+                  Actionable feedback
+                </p>
                 <p className="mt-1 text-slate-600">
-                  Every category comes with ready-to-apply guidance pulled from ATS-friendly best
-                  practices.
+                  Every category comes with ready-to-apply guidance pulled from
+                  ATS-friendly best practices.
                 </p>
               </div>
               <div className="rounded-2xl border border-slate-200/60 bg-white/80 px-4 py-3">
-                <p className="font-semibold text-slate-800">Visual resume preview</p>
+                <p className="font-semibold text-slate-800">
+                  Visual resume preview
+                </p>
                 <p className="mt-1 text-slate-600">
-                  Compare versions side-by-side and link directly to the source PDF stored in Puter.
+                  Compare versions side-by-side and link directly to the source
+                  PDF stored in Puter.
                 </p>
               </div>
               <div className="rounded-2xl border border-slate-200/60 bg-white/80 px-4 py-3">
                 <p className="font-semibold text-slate-800">Secure storage</p>
                 <p className="mt-1 text-slate-600">
-                  Your resumes stay private; delete any analysis instantly from the Wipe workspace.
+                  Your resumes stay private; delete any analysis instantly from
+                  the Wipe workspace.
                 </p>
               </div>
             </div>
@@ -146,11 +165,16 @@ export default function Home() {
 
           <dl className="grid w-full grid-cols-1 items-stretch gap-6 pt-8 sm:grid-cols-3 lg:col-span-2">
             {heroInsights.map((insight) => (
-              <div key={insight.label} className="surface-card surface-card--tight h-full text-left">
+              <div
+                key={insight.label}
+                className="surface-card surface-card--tight h-full text-left"
+              >
                 <dt className="text-xs font-semibold uppercase tracking-[0.28em] text-indigo-500">
                   {insight.label}
                 </dt>
-                <dd className="mt-3 text-2xl font-semibold text-slate-900">{insight.value}</dd>
+                <dd className="mt-3 text-2xl font-semibold text-slate-900">
+                  {insight.value}
+                </dd>
                 <p className="text-sm text-slate-500">{insight.description}</p>
               </div>
             ))}
@@ -164,8 +188,8 @@ export default function Home() {
                 Your analyses at a glance
               </h2>
               <p className="text-base text-slate-600 sm:text-lg">
-                Revisit past submissions, monitor improvements, and dive back into detailed insights
-                anytime.
+                Revisit past submissions, monitor improvements, and dive back
+                into detailed insights anytime.
               </p>
             </div>
           </div>
@@ -199,8 +223,8 @@ export default function Home() {
                 No analyses yet. Your first upload unlocks personalized insights
               </h3>
               <p className="text-slate-600">
-                Drag in a PDF resume, share the role you are focused on, and Resumind will return
-                actionable guidance within seconds.
+                Drag in a PDF resume, share the role you are focused on, and
+                Resumind will return actionable guidance within seconds.
               </p>
               <Link to="/upload" className="primary-button px-5 py-3 text-sm">
                 Upload your first resume
@@ -212,11 +236,3 @@ export default function Home() {
     </main>
   );
 }
-
-
-
-
-
-
-
-

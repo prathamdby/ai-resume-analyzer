@@ -34,7 +34,11 @@ const FileUploader = ({ onFileSelect }: FileUploaderProps) => {
   const rejection = fileRejections[0];
 
   return (
-    <div className="uploader surface-card surface-card--tight" role="group" aria-label="Resume upload">
+    <div
+      className="uploader surface-card surface-card--tight"
+      role="group"
+      aria-label="Resume upload"
+    >
       <div
         {...getRootProps({
           className: cn(
@@ -52,7 +56,9 @@ const FileUploader = ({ onFileSelect }: FileUploaderProps) => {
             </div>
             <div className="space-y-1 text-sm text-slate-600">
               <p className="text-base font-semibold text-slate-700">
-                {isDragActive ? "Drop your resume" : "Click to upload or drag and drop"}
+                {isDragActive
+                  ? "Drop your resume"
+                  : "Click to upload or drag and drop"}
               </p>
               <p>PDF only, up to {formatSize(maxFileSize)}</p>
             </div>
@@ -60,14 +66,22 @@ const FileUploader = ({ onFileSelect }: FileUploaderProps) => {
         )}
 
         {file && (
-          <div className="uploader-selected-file" onClick={(event) => event.stopPropagation()}>
+          <div
+            className="uploader-selected-file"
+            onClick={(event) => event.stopPropagation()}
+          >
             <div className="flex items-center gap-3">
               <img src="/images/pdf.png" alt="PDF" className="h-10 w-10" />
               <div className="text-left">
-                <p className="text-sm font-medium text-slate-700" title={file.name}>
+                <p
+                  className="text-sm font-medium text-slate-700"
+                  title={file.name}
+                >
                   {file.name}
                 </p>
-                <p className="text-xs text-slate-500">{formatSize(file.size)}</p>
+                <p className="text-xs text-slate-500">
+                  {formatSize(file.size)}
+                </p>
               </div>
             </div>
             <button
@@ -83,7 +97,8 @@ const FileUploader = ({ onFileSelect }: FileUploaderProps) => {
 
       {rejection && (
         <p className="mt-3 text-sm font-semibold text-amber-600" role="alert">
-          {rejection.errors[0]?.message || "Please upload a PDF smaller than 20 MB."}
+          {rejection.errors[0]?.message ||
+            "Please upload a PDF smaller than 20 MB."}
         </p>
       )}
     </div>
@@ -91,4 +106,3 @@ const FileUploader = ({ onFileSelect }: FileUploaderProps) => {
 };
 
 export default FileUploader;
-

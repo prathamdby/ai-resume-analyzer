@@ -8,7 +8,9 @@ interface AccordionContextType {
   isItemActive: (id: string) => boolean;
 }
 
-const AccordionContext = createContext<AccordionContextType | undefined>(undefined);
+const AccordionContext = createContext<AccordionContextType | undefined>(
+  undefined,
+);
 
 const useAccordion = () => {
   const context = useContext(AccordionContext);
@@ -31,12 +33,16 @@ export const Accordion: React.FC<AccordionProps> = ({
   allowMultiple = false,
   className = "",
 }) => {
-  const [activeItems, setActiveItems] = useState<string[]>(defaultOpen ? [defaultOpen] : []);
+  const [activeItems, setActiveItems] = useState<string[]>(
+    defaultOpen ? [defaultOpen] : [],
+  );
 
   const toggleItem = (id: string) => {
     setActiveItems((prev) => {
       if (allowMultiple) {
-        return prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id];
+        return prev.includes(id)
+          ? prev.filter((item) => item !== id)
+          : [...prev, id];
       }
       return prev.includes(id) ? [] : [id];
     });
@@ -45,7 +51,9 @@ export const Accordion: React.FC<AccordionProps> = ({
   const isItemActive = (id: string) => activeItems.includes(id);
 
   return (
-    <AccordionContext.Provider value={{ activeItems, toggleItem, isItemActive }}>
+    <AccordionContext.Provider
+      value={{ activeItems, toggleItem, isItemActive }}
+    >
       <div className={cn("space-y-3", className)}>{children}</div>
     </AccordionContext.Provider>
   );
@@ -57,7 +65,11 @@ interface AccordionItemProps {
   className?: string;
 }
 
-export const AccordionItem: React.FC<AccordionItemProps> = ({ id, children, className = "" }) => {
+export const AccordionItem: React.FC<AccordionItemProps> = ({
+  id,
+  children,
+  className = "",
+}) => {
   const { isItemActive } = useAccordion();
   const active = isItemActive(id);
 
@@ -97,14 +109,21 @@ export const AccordionHeader: React.FC<AccordionHeaderProps> = ({
 
   const defaultIcon = (
     <svg
-      className={cn("h-4 w-4 transition-transform duration-200", { "rotate-180": isActive })}
+      className={cn("h-4 w-4 transition-transform duration-200", {
+        "rotate-180": isActive,
+      })}
       fill="none"
       stroke="#334155"
       viewBox="0 0 24 24"
       xmlns="http://www.w3.org/2000/svg"
       aria-hidden="true"
     >
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.6} d="M6 9l6 6 6-6" />
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth={1.6}
+        d="M6 9l6 6 6-6"
+      />
     </svg>
   );
 
@@ -155,7 +174,9 @@ export const AccordionContent: React.FC<AccordionContentProps> = ({
         isActive ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0",
       )}
     >
-      <div className={cn("overflow-hidden px-6 pb-6", className)}>{children}</div>
+      <div className={cn("overflow-hidden px-6 pb-6", className)}>
+        {children}
+      </div>
     </div>
   );
 };
