@@ -256,6 +256,14 @@
     @apply w-full rounded-2xl border border-indigo-100/70 bg-white/95 px-4 py-3 text-base text-slate-900 shadow-[inset_0_2px_8px_rgba(79,70,229,0.07)] transition;
   }
 
+  .input-field {
+    @apply overflow-hidden text-ellipsis whitespace-nowrap;
+  }
+
+  .input-field::placeholder {
+    @apply overflow-hidden text-ellipsis whitespace-nowrap;
+  }
+
   .input-field:focus,
   .textarea-field:focus {
     @apply border-indigo-300 shadow-[0_0_0_1px_rgba(79,70,229,0.35),inset_0_2px_6px_rgba(79,70,229,0.1)];
@@ -323,4 +331,11 @@
   to {
     opacity: 1;
   }
+}
+
+/* Hide Puter splash screen dialog */
+.puter-splash,
+[data-puter-splash],
+.puter-auth-splash {
+  display: none !important;
 }
