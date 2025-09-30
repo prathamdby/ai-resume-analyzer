@@ -31,6 +31,7 @@ const Navbar = () => {
   const handleLogout = async () => {
     await auth.signOut();
     setIsMenuOpen(false);
+    window.location.reload();
   };
 
   return (
@@ -46,7 +47,7 @@ const Navbar = () => {
             <span className="text-xs font-semibold uppercase tracking-[0.38em] text-slate-500">
               Resumind
             </span>
-            <span className="text-sm font-medium text-slate-900">
+            <span className="hidden text-sm font-medium text-slate-900 sm:block">
               AI resume insights
             </span>
           </span>
@@ -118,7 +119,7 @@ const Navbar = () => {
           )}
         </div>
 
-        <div className="navbar__mobile">
+        <div className="navbar__mobile gap-3">
           <Link
             to="/upload"
             className="primary-button px-5 py-2 text-sm"
