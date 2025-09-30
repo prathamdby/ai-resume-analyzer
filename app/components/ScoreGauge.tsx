@@ -15,7 +15,7 @@ const ScoreGauge = ({ score = 75 }: { score: number }) => {
   return (
     <div className="surface-card flex flex-col items-center gap-4 bg-gradient-to-b from-indigo-50/70 via-white to-white">
       <div
-        className="relative h-28 w-56"
+        className="relative h-32 w-56"
         role="img"
         aria-label={`Overall resume score ${score} out of 100`}
       >
@@ -45,14 +45,14 @@ const ScoreGauge = ({ score = 75 }: { score: number }) => {
             className="drop-shadow-[0_12px_30px_rgba(99,102,241,0.25)]"
           />
         </svg>
-        <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center gap-1">
-          <span className="text-xs font-semibold uppercase tracking-[0.32em] text-slate-400 leading-none">
+        <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center gap-0.5 pt-6">
+          <span className="text-[10px] font-semibold uppercase tracking-[0.15em] text-slate-400 leading-none">
             Overall
           </span>
-          <span className="text-3xl font-semibold leading-none text-slate-900">
+          <span className="text-3xl font-bold leading-none text-slate-900 mt-1">
             {score}
           </span>
-          <span className="text-[11px] font-medium uppercase tracking-[0.28em] text-slate-400 leading-none">
+          <span className="text-[10px] font-medium uppercase tracking-[0.12em] text-slate-400 leading-none">
             /100
           </span>
         </div>

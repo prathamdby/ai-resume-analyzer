@@ -14,7 +14,7 @@ const ScoreCircle = ({ score = 75 }: { score: number }) => {
 
   return (
     <div
-      className="relative h-[110px] w-[110px]"
+      className="relative h-[120px] w-[120px]"
       role="img"
       aria-label={`Overall score ${score} out of 100`}
     >
@@ -52,14 +52,14 @@ const ScoreCircle = ({ score = 75 }: { score: number }) => {
           className="drop-shadow-[0_6px_25px_rgba(99,102,241,0.35)]"
         />
       </svg>
-      <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center gap-1">
-        <span className="text-xs font-medium uppercase tracking-[0.32em] text-slate-400 leading-none">
+      <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center gap-0.5">
+        <span className="text-[10px] font-semibold uppercase tracking-[0.15em] text-slate-400 leading-none">
           Score
         </span>
-        <span className="text-2xl font-semibold leading-none text-slate-900">
+        <span className="text-2xl font-bold leading-none text-slate-900 mt-0.5">
           {score}
         </span>
-        <span className="text-[11px] font-medium uppercase tracking-[0.3em] text-slate-400 leading-none">
+        <span className="text-[10px] font-medium uppercase tracking-[0.12em] text-slate-400 leading-none">
           /100
         </span>
       </div>
