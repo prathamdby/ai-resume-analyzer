@@ -215,19 +215,43 @@ export default function Home() {
           )}
 
           {!loadingResumes && !hasResumes && (
-            <div className="surface-card surface-card--tight mx-auto flex max-w-2xl flex-col items-start gap-6 text-left">
+            <div className="surface-card surface-card--tight mx-auto flex w-full max-w-3xl flex-col items-center gap-6 py-16 text-center">
               <div className="rounded-2xl bg-gradient-to-r from-indigo-100/80 to-pink-100/80 px-4 py-2 text-xs font-semibold uppercase tracking-[0.32em] text-indigo-600">
                 Getting started
               </div>
-              <h3 className="text-2xl font-semibold text-slate-900">
+              <h3 className="text-2xl font-semibold text-slate-900 sm:text-3xl">
                 No analyses yet. Your first upload unlocks personalized insights
               </h3>
-              <p className="text-slate-600">
+              <p className="max-w-xl text-slate-600">
                 Drag in a PDF resume, share the role you are focused on, and
                 Resumind will return actionable guidance within seconds.
               </p>
               <Link to="/upload" className="primary-button px-5 py-3 text-sm">
                 Upload your first resume
+              </Link>
+            </div>
+          )}
+
+          {!loadingResumes && hasResumes && (
+            <div className="flex w-full justify-center pt-8">
+              <Link
+                to="/wipe"
+                className="inline-flex items-center gap-2 rounded-full border border-red-200/70 bg-white/80 px-5 py-2.5 text-sm font-medium text-red-600 shadow-sm transition-all hover:border-red-300 hover:bg-red-50 hover:text-red-700 hover:shadow-md focus-visible:ring-red-200/70"
+              >
+                <svg
+                  className="h-4 w-4"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  strokeWidth={2}
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                  />
+                </svg>
+                Wipe My Data
               </Link>
             </div>
           )}
