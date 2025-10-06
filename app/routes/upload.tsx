@@ -6,6 +6,7 @@ import Navbar from "~/components/Navbar";
 import { convertPdfToImage } from "~/lib/pdf2img";
 import { usePuterStore } from "~/lib/puter";
 import { generateUUID } from "~/lib/utils";
+import { toast } from "sonner";
 
 const checklist = [
   {
@@ -32,6 +33,18 @@ const Upload = () => {
   const [statusText, setStatusText] = useState("Upload your resume to begin");
   const [file, setFile] = useState<File | null>(null);
 
+  const getErrorMessage = (error: any): string => {
+    if (!error) return "An unknown error occurred";
+    if (typeof error === "string") return error;
+    if (error.message) return error.message;
+    if (error.error) return String(error.error);
+    try {
+      return JSON.stringify(error);
+    } catch {
+      return "An unexpected error occurred";
+    }
+  };
+
   const handleFileSelect = (newFile: File | null) => {
     if (isProcessing) return;
     setFile(newFile);
@@ -51,70 +64,145 @@ const Upload = () => {
     setIsProcessing(true);
     setStatusText("Uploading your resume...");
 
-    const uploadedFile = await fs.upload([file]);
-    if (!uploadedFile) {
-      setStatusText("We could not upload your file. Please try again.");
-      setIsProcessing(false);
-      return;
-    }
+    try {
+      const uploadedFile = await fs.upload([file]);
+      if (!uploadedFile) {
+        setStatusText("We could not upload your file. Please try again.");
+        toast.error("Upload failed", {
+          description: "Failed to upload your resume. Please try again.",
+        });
+        setIsProcessing(false);
+        return;
+      }
 
-    setStatusText("Preparing your resume for analysis...");
-    const imageFile = await convertPdfToImage(file);
-    if (!imageFile.file) {
-      const errorMsg = imageFile.error
-        ? `We had trouble processing your resume: ${imageFile.error}`
-        : "We had trouble processing your resume. Please try again.";
-      setStatusText(errorMsg);
-      setIsProcessing(false);
-      return;
-    }
+      setStatusText("Preparing your resume for analysis...");
+      const imageFile = await convertPdfToImage(file);
+      if (!imageFile.file) {
+        const errorMsg = imageFile.error
+          ? `We had trouble processing your resume: ${imageFile.error}`
+          : "We had trouble processing your resume. Please try again.";
+        setStatusText(errorMsg);
+        toast.error("Processing failed", {
+          description: imageFile.error || "Failed to process your PDF. Please try again.",
+        });
+        setIsProcessing(false);
+        return;
+      }
 
-    setStatusText("Generating preview...");
-    const uploadedImage = await fs.upload([imageFile.file]);
-    if (!uploadedImage) {
-      setStatusText("Something went wrong. Please try uploading again.");
-      setIsProcessing(false);
-      return;
-    }
+      setStatusText("Generating preview...");
+      const uploadedImage = await fs.upload([imageFile.file]);
+      if (!uploadedImage) {
+        setStatusText("Something went wrong. Please try uploading again.");
+        toast.error("Upload failed", {
+          description: "Failed to upload the preview image. Please try again.",
+        });
+        setIsProcessing(false);
+        return;
+      }
 
-    const uuid = generateUUID();
-    const data = {
-      id: uuid,
-      resumePath: uploadedFile.path,
-      imagePath: uploadedImage.path,
-      companyName,
-      jobTitle,
-      jobDescription,
-      feedback: "",
-    };
-
-    await kv.set(`resume:${uuid}`, JSON.stringify(data));
-
-    setStatusText("Analyzing your resume...");
-
-    const feedback = await ai.feedback(
-      uploadedFile.path,
-      prepareInstructions({
+      const uuid = generateUUID();
+      const data = {
+        id: uuid,
+        resumePath: uploadedFile.path,
+        imagePath: uploadedImage.path,
+        companyName,
         jobTitle,
         jobDescription,
-      }),
-    );
-    if (!feedback) {
-      setStatusText("We could not complete the analysis. Please try again.");
+        feedback: "",
+      };
+
+      try {
+        await kv.set(`resume:${uuid}`, JSON.stringify(data));
+      } catch (kvError) {
+        setStatusText("Failed to save resume data. Please try again.");
+        toast.error("Storage failed", {
+          description: "Could not save your resume data. Please try again.",
+        });
+        setIsProcessing(false);
+        return;
+      }
+
+      setStatusText("Analyzing your resume...");
+
+      try {
+        const feedback = await ai.feedback(
+          uploadedFile.path,
+          prepareInstructions({
+            jobTitle,
+            jobDescription,
+          }),
+        );
+
+        if (!feedback) {
+          setStatusText("We could not complete the analysis. Please try again.");
+          toast.error("Analysis failed", {
+            description: "The AI analysis could not be completed. Please try again.",
+          });
+          setIsProcessing(false);
+          return;
+        }
+
+        const feedbackText =
+          typeof feedback.message.content === "string"
+            ? feedback.message.content
+            : feedback.message.content[0].text;
+
+        try {
+          data.feedback = JSON.parse(feedbackText);
+        } catch (parseError) {
+          setStatusText("Failed to process the analysis results.");
+          toast.error("Processing failed", {
+            description: "Could not parse the analysis results. Please try again.",
+          });
+          setIsProcessing(false);
+          return;
+        }
+
+        await kv.set(`resume:${uuid}`, JSON.stringify(data));
+
+        setStatusText("All done! Redirecting to your results...");
+        navigate(`/resume/${uuid}`);
+      } catch (aiError: any) {
+        const errorMessage = getErrorMessage(aiError);
+
+        // Detect Puter.js quota/usage errors
+        if (
+          errorMessage.includes("quota") ||
+          errorMessage.includes("limit") ||
+          errorMessage.includes("usage") ||
+          errorMessage.includes("exceeded")
+        ) {
+          setStatusText("Puter.js usage limit reached.");
+          toast.error("Usage limit reached", {
+            description: "Puter.js quota exceeded. Please try again later or contact support.",
+          });
+        } else if (
+          errorMessage.includes("network") ||
+          errorMessage.includes("timeout") ||
+          errorMessage.includes("fetch")
+        ) {
+          setStatusText("Connection issue. Please check your internet.");
+          toast.error("Connection error", {
+            description: "Network issue detected. Check your internet and try again.",
+          });
+        } else {
+          setStatusText("Analysis failed. Please try again.");
+          toast.error("Analysis failed", {
+            description: errorMessage || "An unexpected error occurred during analysis.",
+          });
+        }
+
+        setIsProcessing(false);
+      }
+    } catch (error: any) {
+      const errorMessage = getErrorMessage(error);
+
+      setStatusText("Something went wrong. Please try again.");
+      toast.error("Unexpected error", {
+        description: errorMessage || "An unexpected error occurred. Please try again.",
+      });
       setIsProcessing(false);
-      return;
     }
-
-    const feedbackText =
-      typeof feedback.message.content === "string"
-        ? feedback.message.content
-        : feedback.message.content[0].text;
-
-    data.feedback = JSON.parse(feedbackText);
-    await kv.set(`resume:${uuid}`, JSON.stringify(data));
-
-    setStatusText("All done! Redirecting to your results...");
-    navigate(`/resume/${uuid}`);
   };
 
   const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
