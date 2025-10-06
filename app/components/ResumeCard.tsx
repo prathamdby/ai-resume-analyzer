@@ -1,13 +1,14 @@
 ﻿import { Link } from "react-router";
 import ScoreCircle from "./ScoreCircle";
-import ScoreBadge from "./ScoreBadge";
 import { useEffect, useMemo, useState } from "react";
 import { usePuterStore } from "~/lib/puter";
 
 const ResumeCard = ({
   resume: { id, companyName, jobTitle, feedback, imagePath },
+  onDelete,
 }: {
   resume: Resume;
+  onDelete?: (id: string) => void;
 }) => {
   const { fs } = usePuterStore();
   const [resumeUrl, setResumeUrl] = useState<string | null>(null);
@@ -41,36 +42,60 @@ const ResumeCard = ({
   }, [imagePath]);
 
   return (
-    <Link
-      to={`/resume/${id}`}
-      className="group resume-card animate-in fade-in duration-700"
-      aria-label={`View resume analysis for ${companyName || "this resume"}`}
-    >
-      <div className="resume-card-header">
-        <div className="flex flex-col gap-2">
-          <p className="text-xs font-semibold uppercase tracking-[0.28em] text-slate-500">
-            {companyName ? "Application" : "Draft"}
-          </p>
-          <h3 className="text-2xl font-semibold text-slate-900">
-            {companyName || "Untitled resume"}
-          </h3>
-          <p className="text-sm font-medium text-slate-500">
-            {jobTitle || "Add a target job to personalize guidance"}
-          </p>
-        </div>
-        <div className="flex flex-col items-end gap-2">
-          {overallScore !== undefined ? (
-            <>
+    <div className="relative">
+      {onDelete && (
+        <button
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            onDelete(id);
+          }}
+          className="absolute -right-2 -top-2 z-10 flex h-8 w-8 items-center justify-center rounded-full border border-red-200/70 bg-white/95 text-red-600 shadow-sm backdrop-blur transition-all hover:border-red-300 hover:bg-red-50 hover:text-red-700 hover:shadow-md focus-visible:ring-2 focus-visible:ring-red-200/70 focus-visible:ring-offset-2"
+          aria-label={`Delete ${companyName || "resume"}`}
+        >
+          <svg
+            className="h-4 w-4"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+            strokeWidth={2}
+            aria-hidden="true"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              d="M6 18L18 6M6 6l12 12"
+            />
+          </svg>
+        </button>
+      )}
+      <Link
+        to={`/resume/${id}`}
+        className="group resume-card animate-in fade-in duration-700"
+        aria-label={`View resume analysis for ${companyName || "this resume"}`}
+      >
+        <div className="resume-card-header">
+          <div className="flex flex-col gap-2">
+            <p className="text-xs font-semibold uppercase tracking-[0.28em] text-slate-500">
+              {companyName ? "Application" : "Draft"}
+            </p>
+            <h3 className="text-2xl font-semibold text-slate-900">
+              {companyName || "Untitled resume"}
+            </h3>
+            <p className="text-sm font-medium text-slate-500">
+              {jobTitle || "Add a target job to personalize guidance"}
+            </p>
+          </div>
+          <div className="flex flex-col items-end gap-2">
+            {overallScore !== undefined ? (
               <ScoreCircle score={overallScore} />
-              <ScoreBadge score={overallScore} />
-            </>
-          ) : (
-            <div className="rounded-full border border-dashed border-slate-200 px-4 py-2 text-xs font-medium uppercase tracking-[0.28em] text-slate-500">
-              Processing
-            </div>
-          )}
+            ) : (
+              <div className="rounded-full border border-dashed border-slate-200 px-4 py-2 text-xs font-medium uppercase tracking-[0.28em] text-slate-500">
+                Processing
+              </div>
+            )}
+          </div>
         </div>
-      </div>
 
       {resumeUrl ? (
         <div className="gradient-border resume-card__preview">
@@ -128,6 +153,7 @@ const ResumeCard = ({
         </svg>
       </span>
     </Link>
+    </div>
   );
 };
 

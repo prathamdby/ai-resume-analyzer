@@ -2,9 +2,11 @@ import type { Route } from "./+types/home";
 
 import Navbar from "~/components/Navbar";
 import ResumeCard from "~/components/ResumeCard";
+import DeleteConfirmModal from "~/components/DeleteConfirmModal";
 import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router";
 import { usePuterStore } from "~/lib/puter";
+import { toast } from "sonner";
 
 export function meta({}: Route.MetaArgs) {
   return [
@@ -35,10 +37,12 @@ const heroInsights = [
 ];
 
 export default function Home() {
-  const { auth, kv } = usePuterStore();
+  const { auth, kv, fs } = usePuterStore();
   const navigate = useNavigate();
   const [resumes, setResumes] = useState<Resume[]>([]);
   const [loadingResumes, setLoadingResumes] = useState(false);
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [resumeToDelete, setResumeToDelete] = useState<Resume | null>(null);
 
   useEffect(() => {
     if (!auth.isAuthenticated) navigate("/auth?next=/");
@@ -72,6 +76,55 @@ export default function Home() {
     typeof featuredResume?.feedback === "object" && featuredResume.feedback
       ? featuredResume.feedback.overallScore
       : undefined;
+
+  const handleDeleteResume = (id: string) => {
+    const resume = resumes.find((r) => r.id === id);
+    if (!resume) return;
+
+    setResumeToDelete(resume);
+    setDeleteModalOpen(true);
+  };
+
+  const confirmDelete = async () => {
+    if (!resumeToDelete) return;
+
+    try {
+      // Delete from KV store
+      await kv.delete(`resume:${resumeToDelete.id}`);
+
+      // Delete files from Puter FS
+      try {
+        await fs.delete(resumeToDelete.resumePath);
+      } catch (e) {
+        // File might not exist, continue
+      }
+
+      try {
+        await fs.delete(resumeToDelete.imagePath);
+      } catch (e) {
+        // File might not exist, continue
+      }
+
+      // Update local state
+      setResumes((prev) => prev.filter((r) => r.id !== resumeToDelete.id));
+
+      toast.success("Resume deleted", {
+        description: "The resume and its analysis have been removed.",
+      });
+    } catch (error) {
+      toast.error("Delete failed", {
+        description: "Failed to delete the resume. Please try again.",
+      });
+    } finally {
+      setDeleteModalOpen(false);
+      setResumeToDelete(null);
+    }
+  };
+
+  const cancelDelete = () => {
+    setDeleteModalOpen(false);
+    setResumeToDelete(null);
+  };
 
   return (
     <main className="relative overflow-hidden">
@@ -209,7 +262,7 @@ export default function Home() {
           {!loadingResumes && hasResumes && (
             <div className="resumes-section">
               {resumes.map((resume: Resume) => (
-                <ResumeCard key={resume.id} resume={resume} />
+                <ResumeCard key={resume.id} resume={resume} onDelete={handleDeleteResume} />
               ))}
             </div>
           )}
@@ -257,6 +310,13 @@ export default function Home() {
           )}
         </section>
       </section>
+
+      <DeleteConfirmModal
+        isOpen={deleteModalOpen}
+        onConfirm={confirmDelete}
+        onCancel={cancelDelete}
+        title={resumeToDelete?.companyName || "Untitled resume"}
+      />
     </main>
   );
 }
