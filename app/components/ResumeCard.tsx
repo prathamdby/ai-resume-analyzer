@@ -97,62 +97,62 @@ const ResumeCard = ({
           </div>
         </div>
 
-      {resumeUrl ? (
-        <div className="gradient-border resume-card__preview">
-          <img
-            src={resumeUrl}
-            alt={
-              companyName ? `${companyName} resume preview` : "Resume preview"
-            }
-            className="h-[320px] w-full object-cover object-top"
-          />
-        </div>
-      ) : (
-        <div className="resume-card__preview flex h-[320px] items-center justify-center bg-slate-100 text-sm text-slate-500">
-          Preview will appear after upload completes
-        </div>
-      )}
+        {resumeUrl ? (
+          <div className="gradient-border resume-card__preview">
+            <img
+              src={resumeUrl}
+              alt={
+                companyName ? `${companyName} resume preview` : "Resume preview"
+              }
+              className="h-[320px] w-full object-cover object-top"
+            />
+          </div>
+        ) : (
+          <div className="resume-card__preview flex h-[320px] items-center justify-center bg-slate-100 text-sm text-slate-500">
+            Preview will appear after upload completes
+          </div>
+        )}
 
-      {hasFeedback && (
-        <div className="flex flex-col gap-4 text-sm text-slate-600">
-          <p className="font-semibold text-slate-700">Top strengths</p>
-          <ul className="grid gap-2 sm:grid-cols-2">
-            {highlightCategories.map((category) => (
-              <li
-                key={`${id}-${category.label}`}
-                className="flex items-center justify-between gap-3 rounded-2xl bg-indigo-50/40 px-3 py-2 text-slate-600"
-              >
-                <span className="text-sm font-medium text-slate-700">
-                  {category.label}
-                </span>
-                <span className="text-sm font-semibold text-slate-900">
-                  {category.score}
-                </span>
-              </li>
-            ))}
-          </ul>
-        </div>
-      )}
+        {hasFeedback && (
+          <div className="flex flex-col gap-4 text-sm text-slate-600">
+            <p className="font-semibold text-slate-700">Top strengths</p>
+            <ul className="grid gap-2 sm:grid-cols-2">
+              {highlightCategories.map((category) => (
+                <li
+                  key={`${id}-${category.label}`}
+                  className="flex items-center justify-between gap-3 rounded-2xl bg-indigo-50/40 px-3 py-2 text-slate-600"
+                >
+                  <span className="text-sm font-medium text-slate-700">
+                    {category.label}
+                  </span>
+                  <span className="text-sm font-semibold text-slate-900">
+                    {category.score}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
 
-      <span className="mt-auto flex items-center justify-between text-sm font-semibold text-indigo-600">
-        View detailed analysis
-        <svg
-          className="h-4 w-4 shrink-0 transition-transform duration-200 group-hover:translate-x-1"
-          viewBox="0 0 24 24"
-          fill="none"
-          xmlns="http://www.w3.org/2000/svg"
-          aria-hidden="true"
-        >
-          <path
-            d="M5 12h14M13 6l6 6-6 6"
-            stroke="currentColor"
-            strokeWidth="1.8"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
-        </svg>
-      </span>
-    </Link>
+        <span className="mt-auto flex items-center justify-between text-sm font-semibold text-indigo-600">
+          View detailed analysis
+          <svg
+            className="h-4 w-4 shrink-0 transition-transform duration-200 group-hover:translate-x-1"
+            viewBox="0 0 24 24"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+            aria-hidden="true"
+          >
+            <path
+              d="M5 12h14M13 6l6 6-6 6"
+              stroke="currentColor"
+              strokeWidth="1.8"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          </svg>
+        </span>
+      </Link>
     </div>
   );
 };

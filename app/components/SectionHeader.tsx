@@ -37,7 +37,7 @@ const SectionHeader = ({
           <span
             className={cn(
               "inline-flex size-12 shrink-0 items-center justify-center rounded-2xl text-lg",
-              iconPalette[iconTone]
+              iconPalette[iconTone],
             )}
           >
             {icon.Icon ? (

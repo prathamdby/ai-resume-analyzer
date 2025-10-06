@@ -48,7 +48,7 @@ const ScoreBadge: React.FC<ScoreBadgeProps> = ({
         "score-badge",
         palette.background,
         palette.text,
-        size === "sm" ? "px-2 py-1 text-xs" : "px-3 py-1 text-sm"
+        size === "sm" ? "px-2 py-1 text-xs" : "px-3 py-1 text-sm",
       )}
       aria-label={`Score ${clampedScore} out of 100, ${palette.label}`}
     >

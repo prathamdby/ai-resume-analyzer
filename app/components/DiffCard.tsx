@@ -85,7 +85,7 @@ const DiffCard = ({
     <div
       className={cn(
         "overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm",
-        applied && "ring-2 ring-emerald-200"
+        applied && "ring-2 ring-emerald-200",
       )}
     >
       <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 bg-slate-50/80 px-4 py-2">
@@ -97,7 +97,7 @@ const DiffCard = ({
             className={cn(
               "rounded-md px-2 py-0.5 text-[11px] font-semibold",
               priorityStyles.bg,
-              priorityStyles.text
+              priorityStyles.text,
             )}
           >
             {priorityStyles.label}
@@ -127,7 +127,7 @@ const DiffCard = ({
               "inline-flex items-center gap-1 rounded-md px-2 py-1 font-semibold transition",
               applied
                 ? "text-emerald-600 hover:bg-emerald-50"
-                : "text-slate-600 hover:bg-slate-100"
+                : "text-slate-600 hover:bg-slate-100",
             )}
             type="button"
           >

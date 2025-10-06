@@ -83,7 +83,8 @@ const Upload = () => {
           : "We had trouble processing your resume. Please try again.";
         setStatusText(errorMsg);
         toast.error("Processing failed", {
-          description: imageFile.error || "Failed to process your PDF. Please try again.",
+          description:
+            imageFile.error || "Failed to process your PDF. Please try again.",
         });
         setIsProcessing(false);
         return;
@@ -134,9 +135,12 @@ const Upload = () => {
         );
 
         if (!feedback) {
-          setStatusText("We could not complete the analysis. Please try again.");
+          setStatusText(
+            "We could not complete the analysis. Please try again.",
+          );
           toast.error("Analysis failed", {
-            description: "The AI analysis could not be completed. Please try again.",
+            description:
+              "The AI analysis could not be completed. Please try again.",
           });
           setIsProcessing(false);
           return;
@@ -152,7 +156,8 @@ const Upload = () => {
         } catch (parseError) {
           setStatusText("Failed to process the analysis results.");
           toast.error("Processing failed", {
-            description: "Could not parse the analysis results. Please try again.",
+            description:
+              "Could not parse the analysis results. Please try again.",
           });
           setIsProcessing(false);
           return;
@@ -174,7 +179,8 @@ const Upload = () => {
         ) {
           setStatusText("Puter.js usage limit reached.");
           toast.error("Usage limit reached", {
-            description: "Puter.js quota exceeded. Please try again later or contact support.",
+            description:
+              "Puter.js quota exceeded. Please try again later or contact support.",
           });
         } else if (
           errorMessage.includes("network") ||
@@ -183,12 +189,14 @@ const Upload = () => {
         ) {
           setStatusText("Connection issue. Please check your internet.");
           toast.error("Connection error", {
-            description: "Network issue detected. Check your internet and try again.",
+            description:
+              "Network issue detected. Check your internet and try again.",
           });
         } else {
           setStatusText("Analysis failed. Please try again.");
           toast.error("Analysis failed", {
-            description: errorMessage || "An unexpected error occurred during analysis.",
+            description:
+              errorMessage || "An unexpected error occurred during analysis.",
           });
         }
 
@@ -199,7 +207,8 @@ const Upload = () => {
 
       setStatusText("Something went wrong. Please try again.");
       toast.error("Unexpected error", {
-        description: errorMessage || "An unexpected error occurred. Please try again.",
+        description:
+          errorMessage || "An unexpected error occurred. Please try again.",
       });
       setIsProcessing(false);
     }

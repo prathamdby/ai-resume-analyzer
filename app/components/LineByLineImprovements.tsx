@@ -95,7 +95,7 @@ const LineByLineImprovements = ({
   const totalImprovements = improvements.length;
   const appliedCount = appliedIds.size;
   const highPriorityCount = improvements.filter(
-    (imp) => imp.priority === "high"
+    (imp) => imp.priority === "high",
   ).length;
 
   return (
@@ -189,7 +189,7 @@ const LineByLineImprovements = ({
                     improvement={improvement}
                     onApply={handleApply}
                     isApplied={appliedIds.has(
-                      improvement.sectionTitle + improvement.original
+                      improvement.sectionTitle + improvement.original,
                     )}
                   />
                 ))}

@@ -262,7 +262,11 @@ export default function Home() {
           {!loadingResumes && hasResumes && (
             <div className="resumes-section">
               {resumes.map((resume: Resume) => (
-                <ResumeCard key={resume.id} resume={resume} onDelete={handleDeleteResume} />
+                <ResumeCard
+                  key={resume.id}
+                  resume={resume}
+                  onDelete={handleDeleteResume}
+                />
               ))}
             </div>
           )}

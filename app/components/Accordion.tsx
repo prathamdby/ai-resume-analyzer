@@ -19,7 +19,7 @@ interface AccordionContextType {
 }
 
 const AccordionContext = createContext<AccordionContextType | undefined>(
-  undefined
+  undefined,
 );
 
 const useAccordion = () => {
@@ -83,7 +83,7 @@ export const Accordion: React.FC<AccordionProps> = ({
       try {
         localStorage.setItem(
           `accordion-${persistKey}`,
-          JSON.stringify(activeItems)
+          JSON.stringify(activeItems),
         );
       } catch (error) {
         console.warn("Failed to save accordion state to localStorage", error);
@@ -194,7 +194,7 @@ export const AccordionItem: React.FC<AccordionItemProps> = ({
       className={cn(
         "overflow-hidden rounded-3xl border border-white/70 bg-white/90 shadow-[var(--shadow-ring)] transition-all duration-200",
         active ? "shadow-[0_22px_45px_-30px_rgba(99,102,241,0.35)]" : "",
-        className
+        className,
       )}
     >
       {children}
@@ -249,7 +249,7 @@ export const AccordionHeader: React.FC<AccordionHeaderProps> = ({
       onClick={() => toggleItem(itemId)}
       className={cn(
         "flex w-full items-center justify-between gap-4 px-6 py-4 text-left text-sm font-medium text-slate-700 hover:bg-slate-50/60",
-        className
+        className,
       )}
       aria-expanded={isActive}
       aria-controls={contentId}
@@ -286,7 +286,7 @@ export const AccordionContent: React.FC<AccordionContentProps> = ({
       aria-labelledby={headerId}
       className={cn(
         "grid transition-all duration-300 ease-in-out",
-        isActive ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0"
+        isActive ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0",
       )}
     >
       <div className={cn("overflow-hidden px-6 pb-6", className)}>

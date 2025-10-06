@@ -50,7 +50,8 @@ export function Layout({ children }: { children: React.ReactNode }) {
           toastOptions={{
             duration: 6000,
             classNames: {
-              toast: "rounded-2xl border border-white/70 bg-white/90 backdrop-blur-xl shadow-lg font-sans",
+              toast:
+                "rounded-2xl border border-white/70 bg-white/90 backdrop-blur-xl shadow-lg font-sans",
               title: "text-sm font-semibold text-slate-900",
               description: "text-sm text-slate-600",
               error: "border-red-100 bg-badge-red/95",
