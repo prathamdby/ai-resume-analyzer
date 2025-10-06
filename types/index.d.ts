@@ -14,6 +14,16 @@ interface Resume {
   feedback: Feedback;
 }
 
+interface LineImprovement {
+  section: "summary" | "experience" | "education" | "skills" | "other";
+  sectionTitle: string;
+  original: string;
+  suggested: string;
+  reason: string;
+  priority: "high" | "medium" | "low";
+  category: "quantify" | "action-verb" | "keyword" | "clarity" | "ats";
+}
+
 interface Feedback {
   overallScore: number;
   ATS: {
@@ -55,4 +65,5 @@ interface Feedback {
       explanation: string;
     }[];
   };
+  lineImprovements?: LineImprovement[];
 }

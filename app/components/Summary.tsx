@@ -48,7 +48,7 @@ const Summary = ({ feedback }: { feedback: Feedback }) => {
   ];
 
   return (
-    <section className="section-panel surface-card">
+    <div className="flex flex-col gap-6">
       <div className="flex flex-col gap-6 lg:flex-row">
         <ScoreGauge score={feedback.overallScore} />
         <div className="flex flex-1 flex-col justify-center gap-4">
@@ -80,7 +80,7 @@ const Summary = ({ feedback }: { feedback: Feedback }) => {
           </li>
         ))}
       </ul>
-    </section>
+    </div>
   );
 };
 

@@ -10,35 +10,13 @@ interface ATSProps {
   suggestions: Suggestion[];
 }
 
-const getSubtitle = (score: number) => {
-  if (score >= 80) return "Great job!";
-  if (score >= 60) return "Almost there";
-  if (score >= 40) return "Good start";
-  return "Needs more focus";
-};
-
 const ATS: React.FC<ATSProps> = ({ score, suggestions }) => {
   const normalizedScore = Math.max(0, Math.min(score, 100));
-  const subtitle = getSubtitle(normalizedScore);
 
   return (
-    <section className="ats-panel surface-card">
-      <div className="ats-panel__header">
-        <div className="flex items-center gap-4">
-          <span className="inline-flex size-12 items-center justify-center rounded-2xl bg-indigo-100 text-sm font-semibold uppercase tracking-[0.24em] text-indigo-600">
-            ATS
-          </span>
-          <div>
-            <h2 className="text-xl font-semibold text-slate-900">
-              ATS readiness
-            </h2>
-            <p className="text-sm text-slate-600">{subtitle}</p>
-          </div>
-        </div>
+    <div className="flex flex-col gap-6">
+      <div className="flex flex-col gap-4">
         <ScoreBadge score={normalizedScore} />
-      </div>
-
-      <div className="space-y-4">
         <div className="h-3 w-full overflow-hidden rounded-full bg-slate-100">
           <div
             className="h-full rounded-full bg-gradient-to-r from-indigo-500 via-indigo-400 to-pink-400 transition-all duration-500"
@@ -46,11 +24,13 @@ const ATS: React.FC<ATSProps> = ({ score, suggestions }) => {
             aria-hidden="true"
           />
         </div>
-        <p className="text-sm text-slate-600">
-          This score estimates how parser-friendly your resume is for automated
-          tracking systems. Aim for 80 or above to maximize visibility in
-          recruiter dashboards.
-        </p>
+        <div className="flex flex-col gap-1">
+          <p className="text-sm text-slate-600">
+            This score estimates how parser-friendly your resume is for
+            automated tracking systems. Aim for 80 or above to maximize
+            visibility in recruiter dashboards.
+          </p>
+        </div>
       </div>
 
       <div className="space-y-4">
@@ -91,7 +71,7 @@ const ATS: React.FC<ATSProps> = ({ score, suggestions }) => {
           </p>
         )}
       </div>
-    </section>
+    </div>
   );
 };
 

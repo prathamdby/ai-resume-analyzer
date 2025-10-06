@@ -210,12 +210,58 @@
     @apply sticky top-[110px] h-fit;
   }
 
+  .preview-rail {
+    @apply sticky top-[110px] flex h-[calc(100vh-150px)] flex-col gap-6 px-2 pb-6 sm:px-4;
+  }
+
+  .preview-rail__card {
+    @apply flex h-full flex-col gap-5 overflow-hidden;
+  }
+
+  .preview-rail__frame {
+    @apply flex-1 overflow-hidden rounded-[var(--radius-card)] bg-white;
+  }
+
   .section-panel {
     @apply space-y-6;
   }
 
   .score-badge {
     @apply inline-flex items-center gap-2 rounded-[var(--radius-pill)] px-3 py-1 text-sm font-medium;
+  }
+
+  .diff-block {
+    @apply relative overflow-hidden font-mono text-[13px] leading-relaxed;
+  }
+
+  .diff-block::before {
+    content: "";
+    @apply absolute inset-y-0 left-0 w-1;
+  }
+
+  .diff-block .diff-line {
+    @apply relative flex gap-3 px-5 py-3;
+  }
+
+  .diff-block .diff-line::before {
+    @apply font-mono text-xs uppercase tracking-[0.2em] text-slate-400;
+    width: 60px;
+  }
+
+  .diff-block .diff-line.minus::before {
+    content: "-";
+  }
+
+  .diff-block .diff-line.plus::before {
+    content: "+";
+  }
+
+  .diff-block.bg-red-50::before {
+    @apply bg-red-300;
+  }
+
+  .diff-block.bg-emerald-50::before {
+    @apply bg-emerald-300;
   }
 
   .resume-nav {

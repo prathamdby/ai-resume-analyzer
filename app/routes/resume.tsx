@@ -4,6 +4,15 @@ import ATS from "~/components/ATS";
 import Details from "~/components/Details";
 import Summary from "~/components/Summary";
 import Navbar from "~/components/Navbar";
+import { CheckCheck, FileText, Lightbulb, NotebookPen } from "lucide-react";
+import AnalysisSection from "~/components/AnalysisSection";
+import LineByLineImprovements from "~/components/LineByLineImprovements";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionHeader,
+  AccordionItem,
+} from "~/components/Accordion";
 import { usePuterStore } from "~/lib/puter";
 
 export const meta = () => [
@@ -79,9 +88,9 @@ const Resume = () => {
           </div>
         </header>
 
-        <div className="grid gap-10 lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)] xl:grid-cols-[minmax(0,0.8fr)_minmax(0,1.2fr)]">
-          <aside className="feedback-section feedback-section--pinned">
-            <div className="surface-card surface-card--tight flex flex-col gap-4">
+        <div className="grid gap-10 lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)] xl:grid-cols-[minmax(0,1fr)_minmax(0,1.15fr)]">
+          <aside className="preview-rail">
+            <div className="surface-card surface-card--tight preview-rail__card">
               <div className="flex items-center justify-between">
                 <p className="text-sm font-semibold uppercase tracking-[0.3em] text-indigo-500">
                   Live preview
@@ -97,7 +106,7 @@ const Resume = () => {
                   </a>
                 )}
               </div>
-              <div className="gradient-border overflow-hidden">
+              <div className="preview-rail__frame gradient-border overflow-hidden">
                 {imageUrl ? (
                   <img
                     src={imageUrl}
@@ -105,7 +114,7 @@ const Resume = () => {
                     alt={`Resume preview for ${meta?.companyName || "this submission"}`}
                   />
                 ) : (
-                  <div className="flex h-[480px] items-center justify-center bg-slate-100 text-sm text-slate-500">
+                  <div className="flex h-full items-center justify-center bg-slate-100 text-sm text-slate-500">
                     Preview loading...
                   </div>
                 )}
@@ -119,13 +128,68 @@ const Resume = () => {
 
           <section className="feedback-section lg:pl-0">
             {feedback ? (
-              <div className="flex flex-col gap-8">
-                <Summary feedback={feedback} />
-                <ATS
-                  score={feedback.ATS.score || 0}
-                  suggestions={feedback.ATS.tips || []}
-                />
-                <Details feedback={feedback} />
+              <div className="space-y-6">
+                <div className="surface-card surface-card--tight">
+                  <Summary feedback={feedback} />
+                </div>
+
+                <Accordion
+                  className="space-y-5"
+                  defaultOpen={["line-improvements"]}
+                  allowMultiple
+                  persistKey={`resume-${id}`}
+                  showControls
+                >
+                  <AnalysisSection
+                    id="ats"
+                    icon={{ name: "fact_check", Icon: CheckCheck }}
+                    title="ATS Readiness"
+                    eyebrow="Parser score"
+                    description="Stay above 80 to stay visible in recruiter dashboards."
+                    badge={{
+                      label: "Score",
+                      value: feedback.ATS.score || 0,
+                    }}
+                  >
+                    <ATS
+                      score={feedback.ATS.score || 0}
+                      suggestions={feedback.ATS.tips || []}
+                    />
+                  </AnalysisSection>
+
+                  {feedback.lineImprovements &&
+                    feedback.lineImprovements.length > 0 && (
+                      <AnalysisSection
+                        id="line-improvements"
+                        icon={{ name: "stylus_note", Icon: NotebookPen }}
+                        title="Line-by-Line Improvements"
+                        eyebrow="Rewrite suggestions"
+                        description="Drop in these replacements to boost clarity, impact, and keyword density."
+                        badge={{
+                          label: "Found",
+                          value: feedback.lineImprovements.length,
+                        }}
+                      >
+                        <LineByLineImprovements
+                          improvements={feedback.lineImprovements}
+                        />
+                      </AnalysisSection>
+                    )}
+
+                  <AnalysisSection
+                    id="detailed-coaching"
+                    icon={{ name: "lightbulb", Icon: Lightbulb }}
+                    title="Detailed Coaching"
+                    eyebrow="Category breakdown"
+                    description="Expand each section to review what is working well and the edits that will unlock the next score jump."
+                    badge={{
+                      label: "Sets",
+                      value: 4,
+                    }}
+                  >
+                    <Details feedback={feedback} />
+                  </AnalysisSection>
+                </Accordion>
               </div>
             ) : (
               <div className="surface-card surface-card--tight flex min-h-[420px] flex-col gap-6 text-center">

@@ -82,63 +82,52 @@ const CategoryContent = ({
 
 const Details = ({ feedback }: { feedback: Feedback }) => {
   return (
-    <section className="section-panel surface-card">
-      <div className="flex flex-col gap-2">
-        <h2 className="text-2xl font-semibold text-slate-900">
-          Detailed coaching
-        </h2>
-        <p className="text-sm text-slate-600">
-          Expand each section to review what is working well and the edits that
-          will unlock the next score jump.
-        </p>
-      </div>
-      <Accordion className="space-y-3" defaultOpen="tone-style" allowMultiple>
-        <AccordionItem id="tone-style">
-          <AccordionHeader itemId="tone-style">
-            <CategoryHeader
-              title="Tone & Style"
-              categoryScore={feedback.toneAndStyle.score}
-            />
-          </AccordionHeader>
-          <AccordionContent itemId="tone-style">
-            <CategoryContent tips={feedback.toneAndStyle.tips} />
-          </AccordionContent>
-        </AccordionItem>
-        <AccordionItem id="content">
-          <AccordionHeader itemId="content">
-            <CategoryHeader
-              title="Content"
-              categoryScore={feedback.content.score}
-            />
-          </AccordionHeader>
-          <AccordionContent itemId="content">
-            <CategoryContent tips={feedback.content.tips} />
-          </AccordionContent>
-        </AccordionItem>
-        <AccordionItem id="structure">
-          <AccordionHeader itemId="structure">
-            <CategoryHeader
-              title="Structure"
-              categoryScore={feedback.structure.score}
-            />
-          </AccordionHeader>
-          <AccordionContent itemId="structure">
-            <CategoryContent tips={feedback.structure.tips} />
-          </AccordionContent>
-        </AccordionItem>
-        <AccordionItem id="skills">
-          <AccordionHeader itemId="skills">
-            <CategoryHeader
-              title="Skills"
-              categoryScore={feedback.skills.score}
-            />
-          </AccordionHeader>
-          <AccordionContent itemId="skills">
-            <CategoryContent tips={feedback.skills.tips} />
-          </AccordionContent>
-        </AccordionItem>
-      </Accordion>
-    </section>
+    <Accordion className="space-y-3" defaultOpen="tone-style" allowMultiple>
+      <AccordionItem id="tone-style">
+        <AccordionHeader itemId="tone-style">
+          <CategoryHeader
+            title="Tone & Style"
+            categoryScore={feedback.toneAndStyle.score}
+          />
+        </AccordionHeader>
+        <AccordionContent itemId="tone-style">
+          <CategoryContent tips={feedback.toneAndStyle.tips} />
+        </AccordionContent>
+      </AccordionItem>
+      <AccordionItem id="content">
+        <AccordionHeader itemId="content">
+          <CategoryHeader
+            title="Content"
+            categoryScore={feedback.content.score}
+          />
+        </AccordionHeader>
+        <AccordionContent itemId="content">
+          <CategoryContent tips={feedback.content.tips} />
+        </AccordionContent>
+      </AccordionItem>
+      <AccordionItem id="structure">
+        <AccordionHeader itemId="structure">
+          <CategoryHeader
+            title="Structure"
+            categoryScore={feedback.structure.score}
+          />
+        </AccordionHeader>
+        <AccordionContent itemId="structure">
+          <CategoryContent tips={feedback.structure.tips} />
+        </AccordionContent>
+      </AccordionItem>
+      <AccordionItem id="skills">
+        <AccordionHeader itemId="skills">
+          <CategoryHeader
+            title="Skills"
+            categoryScore={feedback.skills.score}
+          />
+        </AccordionHeader>
+        <AccordionContent itemId="skills">
+          <CategoryContent tips={feedback.skills.tips} />
+        </AccordionContent>
+      </AccordionItem>
+    </Accordion>
   );
 };
 

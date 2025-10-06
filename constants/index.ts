@@ -133,6 +133,15 @@ export const AIResponseFormat = `
             explanation: string; //explain in detail here
           }[]; //give 3-4 tips
         };
+        lineImprovements?: {
+          section: "summary" | "experience" | "education" | "skills" | "other";
+          sectionTitle: string; //e.g., "Experience - Software Engineer at Google"
+          original: string; //exact text from resume to replace
+          suggested: string; //improved version with specific changes
+          reason: string; //why this change matters (1-2 sentences)
+          priority: "high" | "medium" | "low"; //based on impact
+          category: "quantify" | "action-verb" | "keyword" | "clarity" | "ats";
+        }[]; //provide 8-12 specific line-by-line improvements
       }`;
 
 export const prepareInstructions = ({
@@ -160,6 +169,21 @@ You are an expert in ATS (Applicant Tracking System) and resume analysis.
     If provided, take the job description into consideration.
     The job title is: ${jobTitle}
     The job description is: ${jobDescription}
+
+    IMPORTANT: Additionally, provide 8-12 specific line-by-line improvements in the "lineImprovements" array:
+    - Focus on bullet points, summary statements, and skill descriptions
+    - Prioritize changes that add quantifiable metrics (numbers, percentages, time frames)
+    - Replace weak or passive verbs with strong action verbs
+    - Inject relevant keywords from the job description naturally
+    - Improve clarity and conciseness where needed
+    - Mark priority as "high" for changes that significantly impact ATS scoring or relevance
+    - Mark priority as "medium" for moderate improvements
+    - Mark priority as "low" for minor refinements
+    - Categorize each improvement: "quantify" (adding metrics), "action-verb" (stronger verbs), "keyword" (job description alignment), "clarity" (readability), or "ats" (formatting/parsing)
+    - Ensure "original" text is exact and specific enough to locate in the resume
+    - Make "suggested" text a complete, ready-to-use replacement
+    - Explain "reason" in 1-2 sentences focusing on the impact and why it matters
+
     Provide the feedback using the following format: ${AIResponseFormat}
     Return the analysis as a JSON object, without any other text and without the backticks.
     Do not include any other text or comments.`;
