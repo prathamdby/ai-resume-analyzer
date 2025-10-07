@@ -41,7 +41,7 @@ const ATS: React.FC<ATSProps> = ({ score, suggestions }) => {
           {suggestions.map((suggestion, index) => (
             <li
               key={`${suggestion.type}-${index}`}
-              className="flex items-start gap-3 rounded-2xl border border-slate-100 bg-white/90 px-4 py-3"
+              className="flex items-center gap-3 rounded-2xl border border-slate-100 bg-white/90 px-4 py-3"
             >
               <span
                 className={`inline-flex size-9 shrink-0 items-center justify-center rounded-full ${suggestion.type === "good" ? "bg-green-100" : "bg-amber-100"}`}

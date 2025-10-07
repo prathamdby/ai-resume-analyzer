@@ -26,7 +26,7 @@ const buildCategoryCopy = (
 const Summary = ({ feedback }: { feedback: Feedback }) => {
   const categories = [
     {
-      title: "Tone & Style",
+      title: "Tone",
       score: feedback.toneAndStyle.score,
       highlight: feedback.toneAndStyle.tips?.[0]?.tip,
     },
