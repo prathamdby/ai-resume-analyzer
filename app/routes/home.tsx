@@ -55,7 +55,7 @@ export default function Home() {
       const items = (await kv.list("resume:*", true)) as KVItem[];
 
       const parsedResumes = items?.map(
-        (resume) => JSON.parse(resume.value) as Resume
+        (resume) => JSON.parse(resume.value) as Resume,
       );
 
       setResumes(parsedResumes || []);
@@ -67,7 +67,7 @@ export default function Home() {
 
   const finishedResumes = useMemo(
     () => resumes.filter((resume) => !!resume.feedback),
-    [resumes]
+    [resumes],
   );
 
   const hasResumes = finishedResumes.length > 0;

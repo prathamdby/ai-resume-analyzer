@@ -135,12 +135,9 @@ const Upload = () => {
         );
 
         if (!feedback) {
-          setStatusText(
-            "We could not complete the analysis. Please try again.",
-          );
+          setStatusText("Please try again later!");
           toast.error("Analysis failed", {
-            description:
-              "The AI analysis could not be completed. Please try again.",
+            description: "Please try again later!",
           });
           setIsProcessing(false);
           return;
@@ -154,10 +151,9 @@ const Upload = () => {
         try {
           data.feedback = JSON.parse(feedbackText);
         } catch (parseError) {
-          setStatusText("Failed to process the analysis results.");
+          setStatusText("Please try again later!");
           toast.error("Processing failed", {
-            description:
-              "Could not parse the analysis results. Please try again.",
+            description: "Please try again later!",
           });
           setIsProcessing(false);
           return;
@@ -168,38 +164,10 @@ const Upload = () => {
         setStatusText("All done! Redirecting to your results...");
         navigate(`/resume/${uuid}`);
       } catch (aiError: any) {
-        const errorMessage = getErrorMessage(aiError);
-
-        // Detect Puter.js quota/usage errors
-        if (
-          errorMessage.includes("quota") ||
-          errorMessage.includes("limit") ||
-          errorMessage.includes("usage") ||
-          errorMessage.includes("exceeded")
-        ) {
-          setStatusText("Puter.js usage limit reached.");
-          toast.error("Usage limit reached", {
-            description:
-              "Puter.js quota exceeded. Please try again later or contact support.",
-          });
-        } else if (
-          errorMessage.includes("network") ||
-          errorMessage.includes("timeout") ||
-          errorMessage.includes("fetch")
-        ) {
-          setStatusText("Connection issue. Please check your internet.");
-          toast.error("Connection error", {
-            description:
-              "Network issue detected. Check your internet and try again.",
-          });
-        } else {
-          setStatusText("Analysis failed. Please try again.");
-          toast.error("Analysis failed", {
-            description:
-              errorMessage || "An unexpected error occurred during analysis.",
-          });
-        }
-
+        setStatusText("Please try again later!");
+        toast.error("Analysis failed", {
+          description: "Please try again later!",
+        });
         setIsProcessing(false);
       }
     } catch (error: any) {
