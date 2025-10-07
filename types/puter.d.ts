@@ -1,4 +1,4 @@
-interface FSItem {
+export interface FSItem {
   id: string;
   uid: string;
   name: string;
@@ -13,57 +13,74 @@ interface FSItem {
   writable: boolean;
 }
 
-interface PuterUser {
+export interface PuterUser {
   uuid: string;
   username: string;
+  email?: string;
+  name?: string;
+  avatar?: string;
 }
 
-interface KVItem {
+export interface KVItem {
   key: string;
   value: string;
 }
 
-interface ChatMessageContent {
-  type: "file" | "text";
-  puter_path?: string;
-  text?: string;
+export interface ChatMessageContentFile {
+  type: "file";
+  puter_path: string;
 }
 
-interface ChatMessage {
+export interface ChatMessageContentText {
+  type: "text";
+  text: string;
+}
+
+export type ChatMessageContent =
+  | ChatMessageContentFile
+  | ChatMessageContentText;
+
+export interface ChatMessage {
   role: "user" | "assistant" | "system";
   content: string | ChatMessageContent[];
 }
 
-interface PuterChatOptions {
+export interface PuterChatFunction {
+  name: string;
+  description?: string;
+  parameters: Record<string, unknown>;
+}
+
+export interface PuterChatOptions {
   model?: string;
   stream?: boolean;
   max_tokens?: number;
   temperature?: number;
   tools?: {
     type: "function";
-    function: {
-      name: string;
-      description: string;
-      parameters: { type: string; properties: {} };
-    }[];
-  };
+    function: PuterChatFunction;
+  }[];
 }
 
-interface AIResponse {
+export interface AIResponseMessage {
+  role: string;
+  content: string | unknown[];
+  refusal?: string | null;
+  annotations?: unknown[];
+}
+
+export interface AIResponseUsageItem {
+  type: string;
+  model: string;
+  amount: number;
+  cost: number;
+}
+
+export interface AIResponse {
   index: number;
-  message: {
-    role: string;
-    content: string | any[];
-    refusal: null | string;
-    annotations: any[];
-  };
-  logprobs: null | any;
+  message: AIResponseMessage;
+  logprobs: unknown | null;
   finish_reason: string;
-  usage: {
-    type: string;
-    model: string;
-    amount: number;
-    cost: number;
-  }[];
-  via_ai_chat_service: boolean;
+  usage: AIResponseUsageItem[];
+  via_ai_chat_service?: boolean;
 }
