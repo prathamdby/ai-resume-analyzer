@@ -55,7 +55,7 @@ export default function Home() {
       const items = (await kv.list("resume:*", true)) as KVItem[];
 
       const parsedResumes = items?.map(
-        (resume) => JSON.parse(resume.value) as Resume,
+        (resume) => JSON.parse(resume.value) as Resume
       );
 
       setResumes(parsedResumes || []);
@@ -65,12 +65,17 @@ export default function Home() {
     loadResumes();
   }, []);
 
-  const hasResumes = resumes.length > 0;
+  const finishedResumes = useMemo(
+    () => resumes.filter((resume) => !!resume.feedback),
+    [resumes]
+  );
+
+  const hasResumes = finishedResumes.length > 0;
 
   const featuredResume = useMemo(() => {
     if (!hasResumes) return null;
-    return resumes.find((resume) => !!resume.feedback) ?? resumes[0];
-  }, [resumes, hasResumes]);
+    return finishedResumes[0];
+  }, [finishedResumes, hasResumes]);
 
   const featuredScore =
     typeof featuredResume?.feedback === "object" && featuredResume.feedback
@@ -261,7 +266,7 @@ export default function Home() {
 
           {!loadingResumes && hasResumes && (
             <div className="resumes-section">
-              {resumes.map((resume: Resume) => (
+              {finishedResumes.map((resume: Resume) => (
                 <ResumeCard
                   key={resume.id}
                   resume={resume}
