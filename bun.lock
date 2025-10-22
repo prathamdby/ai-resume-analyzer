@@ -6,7 +6,6 @@
       "dependencies": {
         "@react-router/node": "^7.7.1",
         "@react-router/serve": "^7.7.1",
-        "@vercel/analytics": "^1.5.0",
         "clsx": "^2.1.1",
         "isbot": "^5.1.27",
         "lucide-react": "^0.454.0",
@@ -275,8 +274,6 @@
     "@types/react": ["@types/react@19.1.11", "", { "dependencies": { "csstype": "^3.0.2" } }, "sha512-lr3jdBw/BGj49Eps7EvqlUaoeA0xpj3pc0RoJkHpYaCHkVK7i28dKyImLQb3JVlqs3aYSXf7qYuWOW/fgZnTXQ=="],
 
     "@types/react-dom": ["@types/react-dom@19.1.7", "", { "peerDependencies": { "@types/react": "^19.0.0" } }, "sha512-i5ZzwYpqjmrKenzkoLM2Ibzt6mAsM7pxB6BCIouEVVmgiqaMj1TjaK7hnA36hbW5aZv20kx7Lw6hWzPWg0Rurw=="],
-
-    "@vercel/analytics": ["@vercel/analytics@1.5.0", "https://registry.npmmirror.com/@vercel/analytics/-/analytics-1.5.0.tgz", { "peerDependencies": { "@remix-run/react": "^2", "@sveltejs/kit": "^1 || ^2", "next": ">= 13", "react": "^18 || ^19 || ^19.0.0-rc", "svelte": ">= 4", "vue": "^3", "vue-router": "^4" }, "optionalPeers": ["@remix-run/react", "@sveltejs/kit", "next", "react", "svelte", "vue", "vue-router"] }, "sha512-MYsBzfPki4gthY5HnYN7jgInhAZ7Ac1cYDoRWFomwGHWEX7odTEzbtg9kf/QSo7XEsEAqlQugA6gJ2WS2DEa3g=="],
 
     "@vitejs/plugin-rsc": ["@vitejs/plugin-rsc@0.4.11", "", { "dependencies": { "@mjackson/node-fetch-server": "^0.7.0", "es-module-lexer": "^1.7.0", "estree-walker": "^3.0.3", "magic-string": "^0.30.17", "periscopic": "^4.0.2", "turbo-stream": "^3.1.0", "vitefu": "^1.1.1" }, "peerDependencies": { "react": "*", "react-dom": "*", "vite": "*" } }, "sha512-+4H4wLi+Y9yF58znBfKgGfX8zcqUGt8ngnmNgzrdGdF1SVz7EO0sg7WnhK5fFVHt6fUxsVEjmEabsCWHKPL1Tw=="],
 
