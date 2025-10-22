@@ -44,6 +44,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
       </head>
       <body>
         <script src="https://js.puter.com/v2/" data-splash="false"></script>
+        <Analytics />
 
         {children}
         <Toaster
@@ -64,7 +65,6 @@ export function Layout({ children }: { children: React.ReactNode }) {
         />
         <ScrollRestoration />
         <Scripts />
-        <Analytics />
       </body>
     </html>
   );
