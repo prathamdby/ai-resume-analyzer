@@ -175,7 +175,14 @@ ${pageContent.slice(0, 8000)}`; // Limit content to avoid token limits
           : response.message.content[0]?.text || "";
 
       // Parse the JSON response
-      const extracted = JSON.parse(content.trim());
+      let extracted;
+      try {
+        extracted = JSON.parse(content.trim());
+      } catch (parseError) {
+        throw new Error(
+          `Failed to parse AI response as JSON: ${parseError.message}\nContent: ${content.trim()}`
+        );
+      }
 
       // Autofill the form fields
       if (extracted.companyName) setCompanyName(extracted.companyName);
