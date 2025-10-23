@@ -40,26 +40,51 @@ const Resume = () => {
 
   useEffect(() => {
     const loadResume = async () => {
-      const resume = await kv.get(`resume:${id}`);
-      if (!resume) return;
+      try {
+        const resume = await kv.get(`resume:${id}`);
+        if (!resume) return;
 
-      const data = JSON.parse(resume);
-      setMeta({ companyName: data.companyName, jobTitle: data.jobTitle });
+        let data: Resume;
+        try {
+          data = JSON.parse(resume) as Resume;
+        } catch (parseError) {
+          console.error("Failed to parse resume data:", parseError);
+          return;
+        }
 
-      const resumeBlob = await fs.read(data.resumePath);
-      if (resumeBlob) {
-        const pdfBlob = new Blob([resumeBlob], { type: "application/pdf" });
-        const resumeObjectUrl = URL.createObjectURL(pdfBlob);
-        setResumeUrl(resumeObjectUrl);
+        if (!data || typeof data !== "object") {
+          console.error("Invalid resume data structure");
+          return;
+        }
+
+        setMeta({
+          companyName: data.companyName || undefined,
+          jobTitle: data.jobTitle || undefined,
+        });
+
+        if (data.resumePath) {
+          const resumeBlob = await fs.read(data.resumePath);
+          if (resumeBlob) {
+            const pdfBlob = new Blob([resumeBlob], { type: "application/pdf" });
+            const resumeObjectUrl = URL.createObjectURL(pdfBlob);
+            setResumeUrl(resumeObjectUrl);
+          }
+        }
+
+        if (data.imagePath) {
+          const imageBlob = await fs.read(data.imagePath);
+          if (imageBlob) {
+            const imageObjectUrl = URL.createObjectURL(imageBlob);
+            setImageUrl(imageObjectUrl);
+          }
+        }
+
+        if (data.feedback) {
+          setFeedback(data.feedback as Feedback);
+        }
+      } catch (error) {
+        console.error("Error loading resume:", error);
       }
-
-      const imageBlob = await fs.read(data.imagePath);
-      if (imageBlob) {
-        const imageObjectUrl = URL.createObjectURL(imageBlob);
-        setImageUrl(imageObjectUrl);
-      }
-
-      setFeedback(data.feedback);
     };
 
     loadResume();

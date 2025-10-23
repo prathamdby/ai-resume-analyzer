@@ -99,7 +99,7 @@ const ImportFromSiteModal = ({
             <button
               type="submit"
               disabled={isLoading || !url.trim()}
-              className="flex-1 rounded-full bg-gradient-to-r from-indigo-600 to-indigo-700 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition-all hover:from-indigo-700 hover:to-indigo-800 focus-visible:ring-2 focus-visible:ring-indigo-200 disabled:opacity-60 disabled:cursor-not-allowed"
+              className="flex-1 rounded-full bg-gradient-to-r from-indigo-600 to-indigo-700 px-4 py-2.5 text-sm font-semibold text-white transition-all hover:from-indigo-700 hover:to-indigo-800 focus-visible:ring-2 focus-visible:ring-indigo-200 disabled:opacity-60 disabled:cursor-not-allowed"
             >
               {isLoading ? "Importing..." : "Import"}
             </button>

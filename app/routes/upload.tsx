@@ -40,6 +40,50 @@ const Upload = () => {
   const [jobDescription, setJobDescription] = useState("");
   const [isImporting, setIsImporting] = useState(false);
 
+  const extractMessageText = (content: unknown): string => {
+    if (!content) return "";
+
+    if (typeof content === "string") {
+      return content.trim();
+    }
+
+    if (Array.isArray(content)) {
+      const parts: string[] = [];
+
+      for (const item of content) {
+        if (!item) continue;
+
+        if (typeof item === "string") {
+          parts.push(item);
+          continue;
+        }
+
+        if (
+          typeof item === "object" &&
+          "text" in item &&
+          typeof (item as { text?: unknown }).text === "string"
+        ) {
+          parts.push(((item as { text?: string }).text as string) || "");
+        }
+      }
+
+      return parts.join("").trim();
+    }
+
+    if (
+      typeof content === "object" &&
+      "text" in (content as { text?: unknown }) &&
+      typeof (content as { text?: unknown }).text === "string"
+    ) {
+      return ((content as { text?: string }).text as string).trim();
+    }
+
+    return "";
+  };
+
+  const normalizeExtractedField = (value: unknown): string =>
+    typeof value === "string" ? value.trim() : "";
+
   const getErrorMessage = (error: any): string => {
     if (!error) return "An unknown error occurred";
     if (typeof error === "string") return error;
@@ -137,6 +181,7 @@ const Upload = () => {
 
   const handleImportFromSite = async (url: string) => {
     setIsImporting(true);
+    const maxRetries = 3;
     
     try {
       // Fetch the page content
@@ -146,7 +191,7 @@ const Upload = () => {
         throw new Error("No content found at the provided URL");
       }
 
-      // Use Puter AI to extract job details
+      // Use Puter AI to extract job details with retry logic
       const prompt = `You are a job posting parser. Extract the following information from the provided job posting content and return ONLY a valid JSON object with these exact fields:
 {
   "companyName": "the company name",
@@ -160,34 +205,96 @@ Return ONLY the JSON object, no additional text or explanation.
 Job Posting Content:
 ${pageContent.slice(0, 8000)}`; // Limit content to avoid token limits
 
-      const response = await ai.chat(prompt, {
-        model: "claude-3-7-sonnet",
-        temperature: 0,
-      });
+      let extracted: {
+        companyName: string;
+        jobTitle: string;
+        jobDescription: string;
+      } | null = null;
+      let lastError: Error | null = null;
 
-      if (!response || !response.message || !response.message.content) {
-        throw new Error("Failed to extract job details from the AI response");
+      for (let attempt = 1; attempt <= maxRetries; attempt++) {
+        try {
+          const response = await ai.chat(prompt, {
+            model: "gpt-5-mini",
+            temperature: 0,
+          });
+
+          if (!response || !response.message || !response.message.content) {
+            lastError = new Error("Failed to extract job details from the AI response");
+            continue;
+          }
+
+          const content = extractMessageText(response.message.content);
+
+          if (!content) {
+            lastError = new Error("AI response is empty");
+            continue;
+          }
+
+          // Parse the JSON response with guard
+          try {
+            const parsed = JSON.parse(content) as unknown;
+
+            if (parsed && typeof parsed === "object") {
+              const candidate = parsed as {
+                companyName?: unknown;
+                jobTitle?: unknown;
+                jobDescription?: unknown;
+              };
+
+              const normalizedCompany = normalizeExtractedField(
+                candidate.companyName,
+              );
+              const normalizedJobTitle = normalizeExtractedField(
+                candidate.jobTitle,
+              );
+              const normalizedJobDescription = normalizeExtractedField(
+                candidate.jobDescription,
+              );
+
+              const allFieldsPresent =
+                normalizedCompany.length > 0 &&
+                normalizedJobTitle.length > 0 &&
+                normalizedJobDescription.length > 0;
+
+              if (allFieldsPresent) {
+                extracted = {
+                  companyName: normalizedCompany,
+                  jobTitle: normalizedJobTitle,
+                  jobDescription: normalizedJobDescription,
+                };
+                break;
+              } else {
+                lastError = new Error(
+                  "Extracted data missing required job details",
+                );
+              }
+            } else {
+              lastError = new Error("AI response is not a valid object");
+            }
+          } catch (parseError) {
+            lastError = new Error(
+              `Failed to parse AI response as JSON: ${
+                parseError instanceof Error ? parseError.message : "Unknown error"
+              }`,
+            );
+          }
+        } catch (aiError) {
+          lastError =
+            aiError instanceof Error
+              ? aiError
+              : new Error("AI request failed");
+        }
       }
 
-      const content =
-        typeof response.message.content === "string"
-          ? response.message.content
-          : response.message.content[0]?.text || "";
-
-      // Parse the JSON response
-      let extracted;
-      try {
-        extracted = JSON.parse(content.trim());
-      } catch (parseError) {
-        throw new Error(
-          `Failed to parse AI response as JSON: ${parseError.message}\nContent: ${content.trim()}`
-        );
+      if (!extracted) {
+        throw lastError || new Error("Failed to extract job details after multiple attempts");
       }
 
       // Autofill the form fields
-      if (extracted.companyName) setCompanyName(extracted.companyName);
-      if (extracted.jobTitle) setJobTitle(extracted.jobTitle);
-      if (extracted.jobDescription) setJobDescription(extracted.jobDescription);
+      setCompanyName(extracted.companyName);
+      setJobTitle(extracted.jobTitle);
+      setJobDescription(extracted.jobDescription);
 
       toast.success("Job details imported", {
         description: "The form has been filled with the extracted information.",
@@ -196,11 +303,30 @@ ${pageContent.slice(0, 8000)}`; // Limit content to avoid token limits
       setImportModalOpen(false);
     } catch (error) {
       console.error("Import error:", error);
-      throw error;
+
+      const fallbackMessage =
+        "We couldn't import the job details. Please paste them manually.";
+
+      let toastDescription = fallbackMessage;
+
+      if (
+        error instanceof Error &&
+        (error.message === "Please enter a valid job posting URL." ||
+          error.message.startsWith("Unable to fetch"))
+      ) {
+        toastDescription = error.message;
+      }
+
+      toast.error("Import failed", {
+        description: toastDescription,
+      });
+
+      throw new Error(toastDescription);
     } finally {
       setIsImporting(false);
     }
   };
+
 
   const handleAnalyze = async ({
     companyName,
@@ -295,35 +421,75 @@ ${pageContent.slice(0, 8000)}`; // Limit content to avoid token limits
           return;
         }
 
-        const feedbackText =
-          typeof feedback.message.content === "string"
-            ? feedback.message.content
-            : feedback.message.content[0].text;
+        const feedbackText = extractMessageText(feedback.message.content);
 
-        try {
-          data.feedback = JSON.parse(feedbackText);
-        } catch (parseError) {
+        if (!feedbackText) {
           setStatusText("Please try again later!");
           toast.error("Processing failed", {
-            description: "Please try again later!",
+            description: "AI response was empty. Please try again later!",
           });
           setIsProcessing(false);
           return;
         }
 
-        await kv.set(`resume:${uuid}`, JSON.stringify(data));
+        try {
+          const parsedFeedback = JSON.parse(feedbackText) as unknown;
+
+          if (
+            !parsedFeedback ||
+            typeof parsedFeedback !== "object" ||
+            !("overallScore" in parsedFeedback)
+          ) {
+            setStatusText("Please try again later!");
+            toast.error("Processing failed", {
+              description: "Invalid analysis format. Please try again later!",
+            });
+            setIsProcessing(false);
+            return;
+          }
+
+          data.feedback = parsedFeedback;
+        } catch (parseError) {
+          const errorDetails =
+            parseError instanceof Error
+              ? parseError.message
+              : "Unknown parsing error";
+
+          console.error("Failed to parse AI feedback:", errorDetails);
+
+          setStatusText("Please try again later!");
+          toast.error("Processing failed", {
+            description: "Could not process AI feedback. Please try again later!",
+          });
+          setIsProcessing(false);
+          return;
+        }
+
+        try {
+          await kv.set(`resume:${uuid}`, JSON.stringify(data));
+        } catch (kvSaveError) {
+          console.error("Failed to save feedback to KV:", kvSaveError);
+          setStatusText("Failed to save analysis. Please try again.");
+          toast.error("Storage failed", {
+            description: "Could not save your analysis. Please try again.",
+          });
+          setIsProcessing(false);
+          return;
+        }
 
         setStatusText("All done! Redirecting to your results...");
         navigate(`/resume/${uuid}`);
       } catch (aiError: any) {
+        console.error("AI analysis error:", aiError);
         setStatusText("Please try again later!");
         toast.error("Analysis failed", {
-          description: "Please try again later!",
+          description: "AI analysis failed. Please try again later!",
         });
         setIsProcessing(false);
       }
     } catch (error: any) {
       const errorMessage = getErrorMessage(error);
+      console.error("Upload workflow error:", error);
 
       setStatusText("Something went wrong. Please try again.");
       toast.error("Unexpected error", {
@@ -388,7 +554,7 @@ ${pageContent.slice(0, 8000)}`; // Limit content to avoid token limits
                 type="button"
                 onClick={() => setImportModalOpen(true)}
                 disabled={isProcessing || isImporting}
-                className="inline-flex items-center gap-2 rounded-full border border-indigo-100 bg-white/80 px-4 py-2 text-sm font-medium text-indigo-600 shadow-sm transition-all hover:bg-indigo-50 hover:text-indigo-700 focus-visible:ring-2 focus-visible:ring-indigo-200 disabled:opacity-60 disabled:cursor-not-allowed"
+                className="inline-flex items-center gap-2 rounded-full border border-indigo-100 bg-white/80 px-4 py-2 text-sm font-medium text-indigo-600 transition-all hover:bg-indigo-50 hover:text-indigo-700 focus-visible:ring-2 focus-visible:ring-indigo-200 disabled:opacity-60 disabled:cursor-not-allowed"
               >
                 <Globe className="h-4 w-4" />
                 Import from site
