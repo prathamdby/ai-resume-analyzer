@@ -4,7 +4,6 @@ import ATS from "~/components/ATS";
 import Details from "~/components/Details";
 import Summary from "~/components/Summary";
 import ColdOutreach from "~/components/ColdOutreach";
-import SectionHeader from "~/components/SectionHeader";
 import Navbar from "~/components/Navbar";
 import { CheckCheck, Lightbulb, NotebookPen, MessageSquare } from "lucide-react";
 import AnalysisSection from "~/components/AnalysisSection";
@@ -160,25 +159,25 @@ const Resume = () => {
                   <Summary feedback={feedback} />
                 </div>
 
-                {feedback.coldOutreachMessage && (
-                  <div className="surface-card surface-card--tight space-y-6">
-                    <SectionHeader
-                      icon={{ name: "message", Icon: MessageSquare, tone: "emerald" }}
-                      title="Cold Outreach Message"
-                      eyebrow="Personalized follow-up"
-                      description="Use this tailored note to connect with the hiring team."
-                    />
-                    <ColdOutreach message={feedback.coldOutreachMessage} />
-                  </div>
-                )}
-
                 <Accordion
                   className="space-y-5"
-                  defaultOpen={["line-improvements"]}
+                  defaultOpen={["cold-outreach", "line-improvements"]}
                   allowMultiple
                   persistKey={`resume-${id}`}
                   showControls
                 >
+                  {feedback.coldOutreachMessage && (
+                    <AnalysisSection
+                      id="cold-outreach"
+                      icon={{ name: "message", Icon: MessageSquare }}
+                      title="Cold Outreach Message"
+                      eyebrow="Personalized follow-up"
+                      description="Use this tailored note to connect with the hiring team."
+                    >
+                      <ColdOutreach message={feedback.coldOutreachMessage} />
+                    </AnalysisSection>
+                  )}
+
                   <AnalysisSection
                     id="ats"
                     icon={{ name: "fact_check", Icon: CheckCheck }}
