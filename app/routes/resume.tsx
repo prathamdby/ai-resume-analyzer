@@ -3,8 +3,10 @@ import { Link, useNavigate, useParams } from "react-router";
 import ATS from "~/components/ATS";
 import Details from "~/components/Details";
 import Summary from "~/components/Summary";
+import ColdOutreach from "~/components/ColdOutreach";
+import SectionHeader from "~/components/SectionHeader";
 import Navbar from "~/components/Navbar";
-import { CheckCheck, FileText, Lightbulb, NotebookPen } from "lucide-react";
+import { CheckCheck, Lightbulb, NotebookPen, MessageSquare } from "lucide-react";
 import AnalysisSection from "~/components/AnalysisSection";
 import LineByLineImprovements from "~/components/LineByLineImprovements";
 import {
@@ -157,6 +159,18 @@ const Resume = () => {
                 <div className="surface-card surface-card--tight">
                   <Summary feedback={feedback} />
                 </div>
+
+                {feedback.coldOutreachMessage && (
+                  <div className="surface-card surface-card--tight space-y-6">
+                    <SectionHeader
+                      icon={{ name: "message", Icon: MessageSquare, tone: "emerald" }}
+                      title="Cold Outreach Message"
+                      eyebrow="Personalized follow-up"
+                      description="Use this tailored note to connect with the hiring team."
+                    />
+                    <ColdOutreach message={feedback.coldOutreachMessage} />
+                  </div>
+                )}
 
                 <Accordion
                   className="space-y-5"

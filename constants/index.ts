@@ -142,6 +142,7 @@ export const AIResponseFormat = `
           priority: "high" | "medium" | "low"; //based on impact
           category: "quantify" | "action-verb" | "keyword" | "clarity" | "ats";
         }[]; //provide 8-12 specific line-by-line improvements
+        coldOutreachMessage?: string; //a concise, professional cold LinkedIn DM the user can send to the hiring manager (150-200 words max). Make it personalized based on the resume and job description, highlighting 2-3 key strengths that match the role. Keep it friendly yet professional, and include a clear call to action.
       }`;
 
 export const prepareInstructions = ({
@@ -183,6 +184,14 @@ You are an expert in ATS (Applicant Tracking System) and resume analysis.
     - Ensure "original" text is exact and specific enough to locate in the resume
     - Make "suggested" text a complete, ready-to-use replacement
     - Explain "reason" in 1-2 sentences focusing on the impact and why it matters
+
+    When creating the cold outreach message:
+    - Make it sound like a friendly, professional LinkedIn DM
+    - Reference the company name and job title (and any specific known initiatives or themes from the job description)
+    - Highlight 2-3 concrete strengths or accomplishments from the resume that align with the role
+    - Keep it concise (120-180 words), conversational, and to the point
+    - End with a clear call to action asking for a short chat or opportunity to discuss fit
+    - Do not include placeholders; if you are not sure about a detail, omit it rather than fabricating
 
     Provide the feedback using the following format: ${AIResponseFormat}
     Return the analysis as a JSON object, without any other text and without the backticks.
