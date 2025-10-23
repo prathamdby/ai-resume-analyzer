@@ -3,10 +3,12 @@ import { useState, type FormEvent } from "react";
 import { useNavigate } from "react-router";
 import FileUploader from "~/components/FileUploader";
 import Navbar from "~/components/Navbar";
+import ImportFromSiteModal from "~/components/ImportFromSiteModal";
 import { convertPdfToImage } from "~/lib/pdf2img";
 import { usePuterStore } from "~/lib/puter";
 import { generateUUID } from "~/lib/utils";
 import { toast } from "sonner";
+import { Globe } from "lucide-react";
 
 const checklist = [
   {
@@ -32,6 +34,11 @@ const Upload = () => {
   const [isProcessing, setIsProcessing] = useState(false);
   const [statusText, setStatusText] = useState("Upload your resume to begin");
   const [file, setFile] = useState<File | null>(null);
+  const [importModalOpen, setImportModalOpen] = useState(false);
+  const [companyName, setCompanyName] = useState("");
+  const [jobTitle, setJobTitle] = useState("");
+  const [jobDescription, setJobDescription] = useState("");
+  const [isImporting, setIsImporting] = useState(false);
 
   const getErrorMessage = (error: any): string => {
     if (!error) return "An unknown error occurred";
@@ -48,6 +55,144 @@ const Upload = () => {
   const handleFileSelect = (newFile: File | null) => {
     if (isProcessing) return;
     setFile(newFile);
+  };
+
+  const fetchPageContent = async (rawUrl: string): Promise<string> => {
+    let targetUrl: URL;
+
+    try {
+      targetUrl = new URL(rawUrl);
+    } catch (urlError) {
+      throw new Error("Please enter a valid job posting URL.");
+    }
+
+    const fetchTargets: string[] = [targetUrl.toString()];
+
+    const jinaPrefix = targetUrl.protocol === "https:" ? "https://r.jina.ai/https://" : "https://r.jina.ai/http://";
+    fetchTargets.push(
+      `${jinaPrefix}${targetUrl.host}${targetUrl.pathname}${targetUrl.search}`,
+    );
+
+    let lastError: Error | null = null;
+
+    for (const attemptUrl of fetchTargets) {
+      try {
+        const response = await fetch(attemptUrl, {
+          headers: {
+            "User-Agent": "ResumindJobFetcher/1.0",
+            Accept: "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+          },
+        });
+
+        if (!response.ok) {
+          lastError = new Error(`Failed to fetch: ${response.status} ${response.statusText}`);
+          continue;
+        }
+
+        const html = await response.text();
+        if (!html) {
+          lastError = new Error("The response did not contain any content.");
+          continue;
+        }
+
+        if (typeof window === "undefined" || typeof DOMParser === "undefined") {
+          lastError = new Error("Job importing is only available in the browser.");
+          continue;
+        }
+
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(html, "text/html");
+        if (!doc?.body) {
+          lastError = new Error("Could not parse the job posting HTML.");
+          continue;
+        }
+
+        const elementsToRemove = doc.querySelectorAll(
+          "script, style, noscript, iframe, svg, canvas, header nav, footer, aside",
+        );
+        elementsToRemove.forEach((el) => el.remove());
+
+        const textContent = doc.body.innerText || doc.body.textContent || "";
+        const cleaned = textContent
+          .replace(/\u00a0/g, " ")
+          .replace(/\s+\n/g, "\n")
+          .replace(/\n{3,}/g, "\n\n")
+          .trim();
+
+        if (cleaned.length > 0) {
+          const maxLength = 20000;
+          return cleaned.length > maxLength ? cleaned.slice(0, maxLength) : cleaned;
+        }
+
+        lastError = new Error("The page did not contain readable content.");
+      } catch (attemptError) {
+        lastError = attemptError instanceof Error
+          ? attemptError
+          : new Error("Failed to fetch the job posting due to a network error.");
+      }
+    }
+
+    throw lastError || new Error("Unable to fetch the job posting. Please copy and paste the job details manually.");
+  };
+
+  const handleImportFromSite = async (url: string) => {
+    setIsImporting(true);
+    
+    try {
+      // Fetch the page content
+      const pageContent = await fetchPageContent(url);
+      
+      if (!pageContent) {
+        throw new Error("No content found at the provided URL");
+      }
+
+      // Use Puter AI to extract job details
+      const prompt = `You are a job posting parser. Extract the following information from the provided job posting content and return ONLY a valid JSON object with these exact fields:
+{
+  "companyName": "the company name",
+  "jobTitle": "the job title/position",
+  "jobDescription": "the full job description including responsibilities and requirements"
+}
+
+If any field cannot be determined, use an empty string for that field.
+Return ONLY the JSON object, no additional text or explanation.
+
+Job Posting Content:
+${pageContent.slice(0, 8000)}`; // Limit content to avoid token limits
+
+      const response = await ai.chat(prompt, {
+        model: "claude-3-7-sonnet",
+        temperature: 0,
+      });
+
+      if (!response || !response.message || !response.message.content) {
+        throw new Error("Failed to extract job details from the AI response");
+      }
+
+      const content =
+        typeof response.message.content === "string"
+          ? response.message.content
+          : response.message.content[0]?.text || "";
+
+      // Parse the JSON response
+      const extracted = JSON.parse(content.trim());
+
+      // Autofill the form fields
+      if (extracted.companyName) setCompanyName(extracted.companyName);
+      if (extracted.jobTitle) setJobTitle(extracted.jobTitle);
+      if (extracted.jobDescription) setJobDescription(extracted.jobDescription);
+
+      toast.success("Job details imported", {
+        description: "The form has been filled with the extracted information.",
+      });
+
+      setImportModalOpen(false);
+    } catch (error) {
+      console.error("Import error:", error);
+      throw error;
+    } finally {
+      setIsImporting(false);
+    }
   };
 
   const handleAnalyze = async ({
@@ -186,12 +331,10 @@ const Upload = () => {
     e.preventDefault();
     if (isProcessing || !file) return;
 
-    const formData = new FormData(e.currentTarget);
-    const companyName = (formData.get("company-name") as string) || "";
-    const jobTitle = (formData.get("job-title") as string) || "";
-    const jobDescription = (formData.get("job-description") as string) || "";
+    const trimmedJobTitle = jobTitle.trim();
+    const trimmedJobDescription = jobDescription.trim();
 
-    if (!jobTitle.trim() || !jobDescription.trim()) {
+    if (!trimmedJobTitle || !trimmedJobDescription) {
       setStatusText(
         "Add a job title and description so the feedback is personalized.",
       );
@@ -199,9 +342,9 @@ const Upload = () => {
     }
 
     handleAnalyze({
-      companyName,
-      jobTitle,
-      jobDescription,
+      companyName: companyName.trim(),
+      jobTitle: trimmedJobTitle,
+      jobDescription: trimmedJobDescription,
       file,
     });
   };
@@ -230,6 +373,21 @@ const Upload = () => {
             className="form-panel surface-card surface-card--tight"
             aria-describedby="upload-status"
           >
+            <div className="flex items-center justify-between gap-4">
+              <h2 className="text-lg font-semibold text-slate-900">
+                Job details
+              </h2>
+              <button
+                type="button"
+                onClick={() => setImportModalOpen(true)}
+                disabled={isProcessing || isImporting}
+                className="inline-flex items-center gap-2 rounded-full border border-indigo-100 bg-white/80 px-4 py-2 text-sm font-medium text-indigo-600 shadow-sm transition-all hover:bg-indigo-50 hover:text-indigo-700 focus-visible:ring-2 focus-visible:ring-indigo-200 disabled:opacity-60 disabled:cursor-not-allowed"
+              >
+                <Globe className="h-4 w-4" />
+                Import from site
+              </button>
+            </div>
+
             <div className="form-panel__grid">
               <div className="input-wrapper">
                 <label htmlFor="company-name" className="input-label">
@@ -237,11 +395,12 @@ const Upload = () => {
                 </label>
                 <input
                   type="text"
-                  name="company-name"
                   id="company-name"
+                  value={companyName}
+                  onChange={(e) => setCompanyName(e.target.value)}
                   placeholder="e.g. Aurora Labs"
                   className="input-field"
-                  disabled={isProcessing}
+                  disabled={isProcessing || isImporting}
                 />
               </div>
               <div className="input-wrapper">
@@ -250,12 +409,13 @@ const Upload = () => {
                 </label>
                 <input
                   type="text"
-                  name="job-title"
                   id="job-title"
+                  value={jobTitle}
+                  onChange={(e) => setJobTitle(e.target.value)}
                   placeholder="e.g. Senior Product Designer"
                   className="input-field"
                   required
-                  disabled={isProcessing}
+                  disabled={isProcessing || isImporting}
                 />
               </div>
             </div>
@@ -266,12 +426,13 @@ const Upload = () => {
               </label>
               <textarea
                 rows={6}
-                name="job-description"
                 id="job-description"
+                value={jobDescription}
+                onChange={(e) => setJobDescription(e.target.value)}
                 placeholder="Paste the most important responsibilities and requirements"
                 className="textarea-field"
                 required
-                disabled={isProcessing}
+                disabled={isProcessing || isImporting}
               />
             </div>
 
@@ -349,6 +510,15 @@ const Upload = () => {
           </aside>
         </div>
       </section>
+
+      <ImportFromSiteModal
+        isOpen={importModalOpen}
+        onCancel={() => {
+          if (isImporting) return;
+          setImportModalOpen(false);
+        }}
+        onImport={handleImportFromSite}
+      />
     </main>
   );
 };
