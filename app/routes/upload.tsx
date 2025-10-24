@@ -225,7 +225,7 @@ const Upload = () => {
     if (!newFile) {
       setFieldErrors((prev) => ({
         ...prev,
-        file: prev.file || validateFile(null),
+        file: validateFile(null),
       }));
       setStatusText("Upload your resume to begin");
       return;
