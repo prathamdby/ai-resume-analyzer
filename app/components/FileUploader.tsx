@@ -1,5 +1,6 @@
-﻿import { useCallback } from "react";
+import { useCallback, useEffect } from "react";
 import { useDropzone } from "react-dropzone";
+import { toast } from "sonner";
 import { cn, formatSize } from "~/lib/utils";
 
 interface FileUploaderProps {
@@ -32,6 +33,26 @@ const FileUploader = ({ onFileSelect }: FileUploaderProps) => {
 
   const file = acceptedFiles[0] || null;
   const rejection = fileRejections[0];
+
+  // Show toast when file is rejected
+  useEffect(() => {
+    if (rejection) {
+      const error = rejection.errors[0];
+      if (error?.code === "file-too-large") {
+        toast.error("File too large", {
+          description: "Please upload a PDF smaller than 20 MB.",
+        });
+      } else if (error?.code === "file-invalid-type") {
+        toast.error("Invalid file type", {
+          description: "Only PDF files are supported. Please upload a PDF resume.",
+        });
+      } else {
+        toast.error("Upload error", {
+          description: error?.message || "Please upload a valid PDF file.",
+        });
+      }
+    }
+  }, [rejection]);
 
   return (
     <div
