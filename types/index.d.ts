@@ -66,4 +66,5 @@ interface Feedback {
     }[];
   };
   lineImprovements?: LineImprovement[];
+  coldOutreachMessage?: string;
 }

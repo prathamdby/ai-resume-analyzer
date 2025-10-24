@@ -3,8 +3,9 @@ import { Link, useNavigate, useParams } from "react-router";
 import ATS from "~/components/ATS";
 import Details from "~/components/Details";
 import Summary from "~/components/Summary";
+import ColdOutreach from "~/components/ColdOutreach";
 import Navbar from "~/components/Navbar";
-import { CheckCheck, FileText, Lightbulb, NotebookPen } from "lucide-react";
+import { CheckCheck, Lightbulb, NotebookPen, MessageSquare } from "lucide-react";
 import AnalysisSection from "~/components/AnalysisSection";
 import LineByLineImprovements from "~/components/LineByLineImprovements";
 import {
@@ -160,11 +161,23 @@ const Resume = () => {
 
                 <Accordion
                   className="space-y-5"
-                  defaultOpen={["line-improvements"]}
+                  defaultOpen={["cold-outreach", "line-improvements"]}
                   allowMultiple
                   persistKey={`resume-${id}`}
                   showControls
                 >
+                  {feedback.coldOutreachMessage && (
+                    <AnalysisSection
+                      id="cold-outreach"
+                      icon={{ name: "message", Icon: MessageSquare }}
+                      title="Cold Outreach Message"
+                      eyebrow="Personalized follow-up"
+                      description="Use this tailored note to connect with the hiring team."
+                    >
+                      <ColdOutreach message={feedback.coldOutreachMessage} />
+                    </AnalysisSection>
+                  )}
+
                   <AnalysisSection
                     id="ats"
                     icon={{ name: "fact_check", Icon: CheckCheck }}
