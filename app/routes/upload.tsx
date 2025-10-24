@@ -704,8 +704,8 @@ ${pageContent.slice(0, 8000)}`; // Limit content to avoid token limits
 
     // Check for any errors
     if (jobTitleError || jobDescriptionError || fileError) {
-      const firstError = jobTitleError || jobDescriptionError || fileError;
-      setStatusText(firstError);
+      
+      
       
       if (jobTitleError) {
         toast.error("Job title required", {
