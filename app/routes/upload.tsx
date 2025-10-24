@@ -819,7 +819,7 @@ ${pageContent.slice(0, 8000)}`; // Limit content to avoid token limits
                   className={cn(
                     "input-field",
                     touched.jobTitle && fieldErrors.jobTitle && "!border-red-300 !bg-red-50/30",
-                    touched.jobTitle && !fieldErrors.jobTitle && jobTitle.trim() && "!border-green-300 !bg-green-50/20"
+                    touched.jobTitle && !fieldErrors.jobTitle && "!border-green-300 !bg-green-50/20"
                   )}
                   aria-invalid={touched.jobTitle && Boolean(fieldErrors.jobTitle)}
                   aria-describedby={
