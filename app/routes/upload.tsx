@@ -6,7 +6,7 @@ import Navbar from "~/components/Navbar";
 import ImportFromSiteModal from "~/components/ImportFromSiteModal";
 import { convertPdfToImage } from "~/lib/pdf2img";
 import { usePuterStore } from "~/lib/puter";
-import { generateUUID } from "~/lib/utils";
+import { cn, generateUUID } from "~/lib/utils";
 import { toast } from "sonner";
 import { Globe } from "lucide-react";
 
@@ -39,6 +39,16 @@ const Upload = () => {
   const [jobTitle, setJobTitle] = useState("");
   const [jobDescription, setJobDescription] = useState("");
   const [isImporting, setIsImporting] = useState(false);
+  const [touched, setTouched] = useState({
+    jobTitle: false,
+    jobDescription: false,
+    file: false,
+  });
+  const [fieldErrors, setFieldErrors] = useState({
+    jobTitle: "",
+    jobDescription: "",
+    file: "",
+  });
 
   const extractMessageText = (content: unknown): string => {
     if (!content) return "";
@@ -188,17 +198,44 @@ const Upload = () => {
     return true;
   };
 
+  const validateJobTitle = (value: string): string => {
+    if (!value.trim()) return "Job title is required";
+    return "";
+  };
+
+  const validateJobDescription = (value: string): string => {
+    if (!value.trim()) return "Job description is required";
+    if (value.trim().length < 50) return "At least 50 characters needed";
+    return "";
+  };
+
+  const validateFile = (fileToValidate: File | null): string => {
+    if (!fileToValidate) return "Resume PDF is required";
+    if (fileToValidate.type !== "application/pdf") return "Only PDF files accepted";
+    if (fileToValidate.size === 0) return "File appears to be empty";
+    if (fileToValidate.size > 20 * 1024 * 1024) return "File must be under 20 MB";
+    return "";
+  };
+
   const handleFileSelect = (newFile: File | null) => {
     if (isProcessing) return;
     setFile(newFile);
+    setTouched((prev) => ({ ...prev, file: true }));
 
     if (!newFile) {
+      setFieldErrors((prev) => ({
+        ...prev,
+        file: prev.file || validateFile(null),
+      }));
       setStatusText("Upload your resume to begin");
       return;
     }
 
-    if (newFile.type !== "application/pdf") {
-      setStatusText("Please upload a PDF resume.");
+    const error = validateFile(newFile);
+    setFieldErrors((prev) => ({ ...prev, file: error }));
+
+    if (error) {
+      setStatusText(error);
       return;
     }
 
@@ -647,78 +684,56 @@ ${pageContent.slice(0, 8000)}`; // Limit content to avoid token limits
     e.preventDefault();
     if (isProcessing) return;
 
-    // Validate file
-    if (!file) {
-      setStatusText("Please upload a resume PDF to continue.");
-      toast.error("Resume required", {
-        description: "Please upload a PDF resume before analyzing.",
-      });
-      return;
-    }
+    // Mark all fields as touched
+    setTouched({
+      jobTitle: true,
+      jobDescription: true,
+      file: true,
+    });
 
-    // Validate file type
-    if (file.type !== "application/pdf") {
-      setStatusText("Please upload a valid PDF file.");
-      toast.error("Invalid file type", {
-        description: "Only PDF files are supported. Please upload a PDF resume.",
-      });
-      return;
-    }
+    // Validate all fields
+    const jobTitleError = validateJobTitle(jobTitle);
+    const jobDescriptionError = validateJobDescription(jobDescription);
+    const fileError = validateFile(file);
 
-    // Validate file size (20MB max)
-    const maxSize = 20 * 1024 * 1024;
-    if (file.size > maxSize) {
-      setStatusText("Resume file is too large.");
-      toast.error("File too large", {
-        description: "Please upload a PDF smaller than 20 MB.",
-      });
-      return;
-    }
+    setFieldErrors({
+      jobTitle: jobTitleError,
+      jobDescription: jobDescriptionError,
+      file: fileError,
+    });
 
-    // Validate file is not empty
-    if (file.size === 0) {
-      setStatusText("Resume file appears to be empty.");
-      toast.error("Empty file", {
-        description: "The PDF file appears to be empty. Please upload a valid resume.",
-      });
-      return;
-    }
-
-    const trimmedJobTitle = jobTitle.trim();
-    const trimmedJobDescription = jobDescription.trim();
-
-    // Validate job title
-    if (!trimmedJobTitle) {
-      setStatusText("Job title is required for personalized feedback.");
-      toast.error("Job title required", {
-        description: "Please enter the job title you're applying for.",
-      });
-      return;
-    }
-
-    // Validate job description
-    if (!trimmedJobDescription) {
-      setStatusText("Job description is required for personalized feedback.");
-      toast.error("Job description required", {
-        description: "Please add the job description to get tailored feedback.",
-      });
-      return;
-    }
-
-    // Validate minimum length for better analysis
-    if (trimmedJobDescription.length < 50) {
-      setStatusText("Job description seems too short.");
-      toast.error("Job description too short", {
-        description: "Please provide a more detailed job description (at least 50 characters) for better analysis.",
-      });
-      return;
+    // Check for any errors
+    if (jobTitleError || jobDescriptionError || fileError) {
+      const firstError = jobTitleError || jobDescriptionError || fileError;
+      setStatusText(firstError);
+      
+      if (jobTitleError) {
+        toast.error("Job title required", {
+          description: jobTitleError,
+        });
+        return;
+      }
+      
+      if (jobDescriptionError) {
+        toast.error("Job description issue", {
+          description: jobDescriptionError,
+        });
+        return;
+      }
+      
+      if (fileError) {
+        toast.error("Resume file issue", {
+          description: fileError,
+        });
+        return;
+      }
     }
 
     handleAnalyze({
       companyName: companyName.trim(),
-      jobTitle: trimmedJobTitle,
-      jobDescription: trimmedJobDescription,
-      file,
+      jobTitle: jobTitle.trim(),
+      jobDescription: jobDescription.trim(),
+      file: file!,
     });
   };
 
@@ -784,12 +799,40 @@ ${pageContent.slice(0, 8000)}`; // Limit content to avoid token limits
                   type="text"
                   id="job-title"
                   value={jobTitle}
-                  onChange={(e) => setJobTitle(e.target.value)}
+                  onChange={(e) => {
+                    setJobTitle(e.target.value);
+                    if (touched.jobTitle) {
+                      setFieldErrors((prev) => ({
+                        ...prev,
+                        jobTitle: validateJobTitle(e.target.value),
+                      }));
+                    }
+                  }}
+                  onBlur={(event) => {
+                    setTouched((prev) => ({ ...prev, jobTitle: true }));
+                    setFieldErrors((prev) => ({
+                      ...prev,
+                      jobTitle: validateJobTitle(event.target.value),
+                    }));
+                  }}
                   placeholder="e.g. Senior Product Designer"
-                  className="input-field"
+                  className={cn(
+                    "input-field",
+                    touched.jobTitle && fieldErrors.jobTitle && "!border-red-300 !bg-red-50/30",
+                    touched.jobTitle && !fieldErrors.jobTitle && jobTitle.trim() && "!border-green-300 !bg-green-50/20"
+                  )}
+                  aria-invalid={touched.jobTitle && Boolean(fieldErrors.jobTitle)}
+                  aria-describedby={
+                    touched.jobTitle && fieldErrors.jobTitle ? "job-title-error" : undefined
+                  }
                   required
                   disabled={isProcessing || isImporting}
                 />
+                {touched.jobTitle && fieldErrors.jobTitle && (
+                  <p id="job-title-error" className="text-sm font-medium text-red-600" role="alert">
+                    {fieldErrors.jobTitle}
+                  </p>
+                )}
               </div>
             </div>
 
@@ -801,19 +844,62 @@ ${pageContent.slice(0, 8000)}`; // Limit content to avoid token limits
                 rows={6}
                 id="job-description"
                 value={jobDescription}
-                onChange={(e) => setJobDescription(e.target.value)}
+                onChange={(e) => {
+                  setJobDescription(e.target.value);
+                  if (touched.jobDescription) {
+                    setFieldErrors((prev) => ({
+                      ...prev,
+                      jobDescription: validateJobDescription(e.target.value),
+                    }));
+                  }
+                }}
+                onBlur={(event) => {
+                  setTouched((prev) => ({ ...prev, jobDescription: true }));
+                  setFieldErrors((prev) => ({
+                    ...prev,
+                    jobDescription: validateJobDescription(event.target.value),
+                  }));
+                }}
                 placeholder="Paste the most important responsibilities and requirements"
-                className="textarea-field"
+                className={cn(
+                  "textarea-field",
+                  touched.jobDescription && fieldErrors.jobDescription && "!border-red-300 !bg-red-50/30",
+                  touched.jobDescription && !fieldErrors.jobDescription && jobDescription.trim().length >= 50 && "!border-green-300 !bg-green-50/20"
+                )}
+                aria-invalid={touched.jobDescription && Boolean(fieldErrors.jobDescription)}
+                aria-describedby={
+                  touched.jobDescription && fieldErrors.jobDescription
+                    ? "job-description-error"
+                    : undefined
+                }
                 required
                 disabled={isProcessing || isImporting}
               />
+              {touched.jobDescription && fieldErrors.jobDescription && (
+                <p id="job-description-error" className="text-sm font-medium text-red-600" role="alert">
+                  {fieldErrors.jobDescription}
+                </p>
+              )}
+              {touched.jobDescription && !fieldErrors.jobDescription && jobDescription.trim().length >= 50 && (
+                <p className="text-sm font-medium text-green-600">
+                  ✓ Looks good! ({jobDescription.trim().length} characters)
+                </p>
+              )}
             </div>
 
             <div className="input-wrapper">
               <label className="input-label required" htmlFor="resume-upload">
                 Resume PDF
               </label>
-              <FileUploader onFileSelect={handleFileSelect} />
+              <FileUploader
+                onFileSelect={handleFileSelect}
+                onErrorChange={(message) => {
+                  setFieldErrors((prev) => ({ ...prev, file: message }));
+                }}
+                error={touched.file ? fieldErrors.file : ""}
+                disabled={isProcessing || isImporting}
+                inputId="resume-upload"
+              />
               <p className="text-xs text-slate-500">
                 We store your file securely in your Puter drive so you can
                 revisit the analysis later.

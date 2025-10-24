@@ -6,41 +6,61 @@ import { cn, formatSize } from "~/lib/utils";
 
 interface FileUploaderProps {
   onFileSelect?: (file: File | null) => void;
+  onErrorChange?: (message: string) => void;
+  error?: string;
+  disabled?: boolean;
+  inputId?: string;
 }
 
-const FileUploader = ({ onFileSelect }: FileUploaderProps) => {
+const FileUploader = ({
+  onFileSelect,
+  onErrorChange,
+  error,
+  disabled,
+  inputId,
+}: FileUploaderProps) => {
   const maxFileSize = 20 * 1024 * 1024;
+
+  const handleRejection = useCallback((rejectedFiles: FileRejection[]) => {
+    const rejection = rejectedFiles[0];
+    const rejectionError = rejection?.errors?.[0];
+
+    let message = rejectionError?.message || "Please upload a valid PDF file.";
+
+    if (rejectionError?.code === "file-too-large") {
+      message = "Please upload a PDF smaller than 20 MB.";
+      toast.error("File too large", {
+        description: message,
+      });
+    } else if (rejectionError?.code === "file-invalid-type") {
+      message = "Only PDF files are supported. Please upload a PDF resume.";
+      toast.error("Invalid file type", {
+        description: message,
+      });
+    } else {
+      toast.error("Upload error", {
+        description: message,
+      });
+    }
+
+    onErrorChange?.(message);
+    onFileSelect?.(null);
+  }, [onErrorChange, onFileSelect]);
 
   const onDrop = useCallback(
     (acceptedFiles: File[], rejectedFiles: FileRejection[]) => {
+      if (disabled) return;
+
       if (rejectedFiles.length > 0) {
-        const rejection = rejectedFiles[0];
-        const error = rejection?.errors?.[0];
-
-        if (error?.code === "file-too-large") {
-          toast.error("File too large", {
-            description: "Please upload a PDF smaller than 20 MB.",
-          });
-          return;
-        }
-
-        if (error?.code === "file-invalid-type") {
-          toast.error("Invalid file type", {
-            description: "Only PDF files are supported. Please upload a PDF resume.",
-          });
-          return;
-        }
-
-        toast.error("Upload error", {
-          description: error?.message || "Please upload a valid PDF file.",
-        });
+        handleRejection(rejectedFiles);
         return;
       }
 
       const file = acceptedFiles[0] || null;
       onFileSelect?.(file);
+      onErrorChange?.("");
     },
-    [onFileSelect],
+    [disabled, handleRejection, onErrorChange, onFileSelect],
   );
 
   const {
@@ -54,10 +74,15 @@ const FileUploader = ({ onFileSelect }: FileUploaderProps) => {
     multiple: false,
     accept: { "application/pdf": [".pdf"] },
     maxSize: maxFileSize,
+    disabled,
   });
 
   const file = acceptedFiles[0] || null;
   const rejection = fileRejections[0];
+
+  const hasError = Boolean(error);
+
+  const helperId = inputId ? `${inputId}-error` : undefined;
 
   return (
     <div
@@ -70,10 +95,19 @@ const FileUploader = ({ onFileSelect }: FileUploaderProps) => {
           className: cn(
             "uploader-dropzone",
             isDragActive && "border-indigo-300 bg-indigo-50/60",
+            hasError && !file && "border-red-300 bg-red-50/30",
+            disabled && "cursor-not-allowed opacity-60",
           ),
         })}
       >
-        <input {...getInputProps({ "aria-label": "Upload resume PDF" })} />
+        <input
+          {...getInputProps({
+            "aria-label": "Upload resume PDF",
+            id: inputId,
+            "aria-invalid": hasError,
+            "aria-describedby": hasError && helperId ? helperId : undefined,
+          })}
+        />
 
         {!file && (
           <div className="flex flex-col items-center gap-4 text-center">
@@ -121,12 +155,22 @@ const FileUploader = ({ onFileSelect }: FileUploaderProps) => {
         )}
       </div>
 
-      {rejection && (
-        <p className="mt-3 text-sm font-semibold text-amber-600" role="alert">
-          {rejection.errors[0]?.message ||
-            "Please upload a PDF smaller than 20 MB."}
-        </p>
-      )}
+      {(() => {
+        const helperMessage = error || rejection?.errors?.[0]?.message;
+        if (!helperMessage) return null;
+
+        const tone = error ? "text-red-600" : "text-amber-600";
+
+        return (
+          <p
+            id={helperId}
+            className={cn("mt-3 text-sm font-semibold", tone)}
+            role="alert"
+          >
+            {helperMessage}
+          </p>
+        );
+      })()}
     </div>
   );
 };
