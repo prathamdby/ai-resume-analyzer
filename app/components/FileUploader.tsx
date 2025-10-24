@@ -1,5 +1,6 @@
-import { useCallback, useEffect } from "react";
+import { useCallback } from "react";
 import { useDropzone } from "react-dropzone";
+import type { FileRejection } from "react-dropzone";
 import { toast } from "sonner";
 import { cn, formatSize } from "~/lib/utils";
 
@@ -11,7 +12,31 @@ const FileUploader = ({ onFileSelect }: FileUploaderProps) => {
   const maxFileSize = 20 * 1024 * 1024;
 
   const onDrop = useCallback(
-    (acceptedFiles: File[]) => {
+    (acceptedFiles: File[], rejectedFiles: FileRejection[]) => {
+      if (rejectedFiles.length > 0) {
+        const rejection = rejectedFiles[0];
+        const error = rejection?.errors?.[0];
+
+        if (error?.code === "file-too-large") {
+          toast.error("File too large", {
+            description: "Please upload a PDF smaller than 20 MB.",
+          });
+          return;
+        }
+
+        if (error?.code === "file-invalid-type") {
+          toast.error("Invalid file type", {
+            description: "Only PDF files are supported. Please upload a PDF resume.",
+          });
+          return;
+        }
+
+        toast.error("Upload error", {
+          description: error?.message || "Please upload a valid PDF file.",
+        });
+        return;
+      }
+
       const file = acceptedFiles[0] || null;
       onFileSelect?.(file);
     },
@@ -33,26 +58,6 @@ const FileUploader = ({ onFileSelect }: FileUploaderProps) => {
 
   const file = acceptedFiles[0] || null;
   const rejection = fileRejections[0];
-
-  // Show toast when file is rejected
-  useEffect(() => {
-    if (rejection) {
-      const error = rejection.errors[0];
-      if (error?.code === "file-too-large") {
-        toast.error("File too large", {
-          description: "Please upload a PDF smaller than 20 MB.",
-        });
-      } else if (error?.code === "file-invalid-type") {
-        toast.error("Invalid file type", {
-          description: "Only PDF files are supported. Please upload a PDF resume.",
-        });
-      } else {
-        toast.error("Upload error", {
-          description: error?.message || "Please upload a valid PDF file.",
-        });
-      }
-    }
-  }, [rejection]);
 
   return (
     <div
