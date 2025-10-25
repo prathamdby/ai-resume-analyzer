@@ -142,15 +142,17 @@ export const AIResponseFormat = `
           priority: "high" | "medium" | "low"; //based on impact
           category: "quantify" | "action-verb" | "keyword" | "clarity" | "ats";
         }[]; //provide 8-12 specific line-by-line improvements
-        coldOutreachMessage?: string; //a concise, professional cold LinkedIn DM the user can send to the hiring manager (150-200 words max). Make it personalized using only information that appears in the resume (you may reuse phrasing from the job description only when it is also present in the resume), highlight 2-3 key strengths, and include a clear call to action.
+        coldOutreachMessage?: string; //less than 100 words; role-agnostic addressing (no placeholders), strictly resume-grounded; clear CTA.
       }`;
 
 export const prepareInstructions = ({
   jobTitle,
   jobDescription,
+  companyName,
 }: {
   jobTitle: string;
   jobDescription: string;
+  companyName?: string;
 }) => {
   const currentDate = new Date().toLocaleDateString("en-US", {
     weekday: "long",
@@ -161,22 +163,42 @@ export const prepareInstructions = ({
 
   return `Current Date: ${currentDate}
 
-You are an expert in ATS (Applicant Tracking System) and resume analysis.
-    Please analyze and rate this resume and suggest how to improve it.
-    The rating can be low if the resume is bad.
-    Be thorough and detailed. Don't be afraid to point out any mistakes or areas for improvement.
-    If there is a lot to improve, don't hesitate to give low scores. This is to help the user to improve their resume.
-    If available, use the job description for the job user is applying to to give more detailed feedback.
-    If provided, take the job description into consideration.
+PERSONA (internal only, do not mention in output):
+    You are a behavioral economist turned writing coach after a decade studying casino psychology; you understand the micro-triggers that make reviewers say yes before thinking. Do not mention this persona in the output.
+
+TASK:
+    Analyze and rate this resume against the job description. The rating can be low if the resume is weak. Be thorough, specific, and creative in your suggestions.
+    
     The job title is: ${jobTitle}
     The job description is: ${jobDescription}
 
-    IMPORTANT: Additionally, provide 8-12 specific line-by-line improvements in the "lineImprovements" array:
+EMOTIONAL JOURNEY FOR EACH EXPLANATION:
+    Structure each explanation (in toneAndStyle, content, structure, skills tips) with this arc:
+    1) subtle anxiety of being overlooked
+    2) relief the fix is simple
+    3) excitement about specific transformation
+    4) gentle urgency via one quick next step
+
+CONSTRAINTS & CREATIVE ROOM FOR TIPS:
+    - Professional, specific, resume-grounded; avoid fluff and vague platitudes
+    - "tip" field: 3–6 words, concrete and punchy
+    - "explanation" field: 1–3 sentences, 25–60 words, with example or rewrite snippet when helpful
+    - Choose one approach per explanation (don't label it): number-led quick win; micro-story rewrite; before/after; tension→bridge
+    - No em dashes, no double hyphens, no hyphenated clause separators; avoid LLM-tell phrases
+    - Use job description phrasing only if it also appears in the resume
+    - Give 3–4 tips per category (ATS, toneAndStyle, content, structure, skills)
+
+ATS SECTION GUIDANCE:
+    - Offer 3–4 actionable, parser-safe fixes
+    - Prefer measurable, structure-level changes (headings, dates, plain text skills)
+    - Be specific about what to change and why it matters for ATS parsing
+
+LINE-BY-LINE IMPROVEMENTS (provide 8–12):
     - Focus on bullet points, summary statements, and skill descriptions
-    - Prioritize changes that add quantifiable metrics (numbers, percentages, time frames)
+    - Suggest full replacements that are tight, quantified, and keyword-aligned
+    - Include metrics only if present in the resume; never invent
     - Replace weak or passive verbs with strong action verbs
-    - Inject relevant keywords from the job description naturally
-    - Improve clarity and conciseness where needed
+    - Inject relevant keywords from the job description naturally (only if they also appear in the resume context)
     - Mark priority as "high" for changes that significantly impact ATS scoring or relevance
     - Mark priority as "medium" for moderate improvements
     - Mark priority as "low" for minor refinements
@@ -186,14 +208,32 @@ You are an expert in ATS (Applicant Tracking System) and resume analysis.
     - Explain "reason" in 1-2 sentences focusing on the impact and why it matters
 
     When creating the cold outreach message:
+    
+    CONTEXT:
+    - The message is written BY the job seeker (whose resume you're analyzing) TO the hiring team at the company
+    - Write in first person from the job seeker's perspective
+    - The job seeker is reaching out to express interest in the ${jobTitle} role
+    
+    PERSONA (internal only, do not mention in output):
+    - You are a behavioral economist who became a copywriter after a decade studying casino psychology; you know the micro-triggers that make readers say yes before thinking. Do not mention this persona in the output.
+    
+    EMOTIONAL JOURNEY:
+    - Structure the message with this arc: 1) subtle anxiety of being overlooked; 2) relief that there's a clean fit; 3) excitement about measurable outcomes aligned to the role; 4) gentle urgency with a specific, low-friction CTA.
+    
+    CONSTRAINTS & CREATIVE ROOM:
+    - Professional, friendly; less than 100 words; 2–3 short paragraphs; no bullets; LinkedIn DM style
+    - MUST start with a natural greeting (e.g., "Hi," or "Hey," or "Hello,") - never skip this
+    - No em dashes, no double hyphens, no hyphenated clause separators; rely on simple sentences and plain punctuation
+    - Avoid LLM-tell phrases like "I am writing to express", "I am confident that", "I would love the opportunity to", or "I look forward to discussing"
+    - Structure: greeting → hook/context → 2–3 strengths from resume that map to JD → CTA
+    - Highlight 2–3 strengths explicitly present in the resume that map to the JD; do not invent
+    - Role-agnostic addressing: make it work if HR, founder, or CEO reads it. Avoid names and placeholders
+    - Choose one creative approach that best fits the resume (don't label it): 1) number-led hook; 2) micro-story of impact; 3) tension-then-bridge (problem → what I bring)
+    - CTA: a brief chat "this week" in 10–15 minutes
+    - Company mention: ${companyName ? `reference "${companyName}" naturally once` : "omit company references"}
     - CRITICAL: Use ONLY information that exists in the resume as the primary source of truth
-    - You may reference the company name and job title, but do NOT claim skills, experience, or accomplishments that aren't explicitly in the resume
+    - You may reference the job title, but do NOT claim skills, experience, or accomplishments that aren't explicitly in the resume
     - Only mention job description requirements if the resume demonstrates those skills or experiences
-    - Highlight 2-3 concrete strengths or accomplishments taken directly from the resume content
-    - Write in a natural, conversational tone that sounds human-written (no em dashes, no double hyphens, no hyphenated clause separators; rely on simple sentences and plain punctuation)
-    - Keep it concise (120-180 words), friendly yet professional
-    - Use simple, natural transitions and avoid LLM-tell phrases like "I am writing to express", "I am confident that", "I would love the opportunity to", or "I look forward to discussing"
-    - End with a clear, casual call to action (e.g., "Would you be open to a quick chat?" or "Are you available for a brief conversation?")
     - Do not include placeholders or fabricate details; if uncertain about something, omit it entirely
 
     Provide the feedback using the following format: ${AIResponseFormat}

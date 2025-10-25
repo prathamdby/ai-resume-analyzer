@@ -53,11 +53,11 @@ const Upload = () => {
   const extractMessageText = (content: unknown): string => {
     if (!content) return "";
 
-    if (typeof content === "string") {
-      return content.trim();
-    }
+    let text = "";
 
-    if (Array.isArray(content)) {
+    if (typeof content === "string") {
+      text = content.trim();
+    } else if (Array.isArray(content)) {
       const parts: string[] = [];
 
       for (const item of content) {
@@ -77,18 +77,13 @@ const Upload = () => {
         }
       }
 
-      return parts.join("").trim();
+      text = parts.join("").trim();
     }
 
-    if (
-      typeof content === "object" &&
-      "text" in (content as { text?: unknown }) &&
-      typeof (content as { text?: unknown }).text === "string"
-    ) {
-      return ((content as { text?: string }).text as string).trim();
-    }
+    // Strip markdown code fences (```json ... ``` or ``` ... ```)
+    text = text.replace(/^```(?:json)?\s*\n?/i, "").replace(/\n?```\s*$/i, "");
 
-    return "";
+    return text.trim();
   };
 
   const normalizeExtractedField = (value: unknown): string =>
@@ -107,7 +102,10 @@ const Upload = () => {
   };
 
   const validateFeedbackStructure = (data: unknown): data is Feedback => {
-    if (!data || typeof data !== "object") return false;
+    if (!data || typeof data !== "object") {
+      console.error("Validation failed: data is not an object");
+      return false;
+    }
 
     const feedback = data as any;
 
@@ -169,7 +167,10 @@ const Upload = () => {
     };
 
     // Check required top-level fields
-    if (typeof feedback.overallScore !== "number") return false;
+    if (typeof feedback.overallScore !== "number") {
+      console.error("Validation failed: overallScore is not a number");
+      return false;
+    }
 
     // Validate ATS tips
     if (
@@ -178,6 +179,7 @@ const Upload = () => {
       typeof feedback.ATS.score !== "number" ||
       !validateTips(feedback.ATS.tips, { requireExplanation: false })
     ) {
+      console.error("Validation failed: ATS section invalid");
       return false;
     }
 
@@ -196,11 +198,13 @@ const Upload = () => {
         typeof sectionData.score !== "number" ||
         !validateTips(sectionData.tips, { requireExplanation: true })
       ) {
+        console.error(`Validation failed: ${section} section invalid`);
         return false;
       }
     }
 
     if (!validateLineImprovements(feedback.lineImprovements)) {
+      console.error("Validation failed: lineImprovements invalid");
       return false;
     }
 
@@ -253,6 +257,36 @@ const Upload = () => {
     setStatusText("Resume uploaded. Ready when you are.");
   };
 
+  const looksLikeNavOrAuthGarbage = (text: string): boolean => {
+    const badPhrases = [
+      "Skip to main content",
+      "Expand search",
+      "Sign in",
+      "Join now",
+      "Welcome back",
+      "Forgot password?",
+      "By clicking Continue",
+      "Agree & Join LinkedIn",
+      "Language",
+      "Similar jobs",
+      "People also viewed",
+      "Similar Searches",
+      "Explore collaborative articles",
+      "More searches",
+      "Get notified",
+      "Set alert",
+    ];
+    const badHits = badPhrases.reduce(
+      (n, p) => n + (text.includes(p) ? 1 : 0),
+      0,
+    );
+    const hasJDSignals =
+      /(Role Overview|About the job|Job description|Responsibilities|Requirements|Qualifications)/i.test(
+        text,
+      );
+    return badHits >= 3 && !hasJDSignals;
+  };
+
   const fetchPageContent = async (rawUrl: string): Promise<string> => {
     let targetUrl: URL;
 
@@ -262,25 +296,28 @@ const Upload = () => {
       throw new Error("Please enter a valid job posting URL.");
     }
 
-    const fetchTargets: string[] = [targetUrl.toString()];
-
     const jinaPrefix =
       targetUrl.protocol === "https:"
         ? "https://r.jina.ai/https://"
         : "https://r.jina.ai/http://";
-    fetchTargets.push(
-      `${jinaPrefix}${targetUrl.host}${targetUrl.pathname}${targetUrl.search}`,
-    );
+    const jinaUrl = `${jinaPrefix}${targetUrl.host}${targetUrl.pathname}${targetUrl.search}`;
+
+    const isLinkedIn = /(^|\.)linkedin\.com$/i.test(targetUrl.hostname);
+    const fetchTargets: string[] = isLinkedIn
+      ? [jinaUrl, targetUrl.toString()]
+      : [targetUrl.toString(), jinaUrl];
 
     let lastError: Error | null = null;
 
     for (const attemptUrl of fetchTargets) {
       try {
+        const isJina = attemptUrl.startsWith("https://r.jina.ai/");
         const response = await fetch(attemptUrl, {
           headers: {
             "User-Agent": "ResumindJobFetcher/1.0",
-            Accept:
-              "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+            Accept: isJina
+              ? "text/plain"
+              : "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
           },
         });
 
@@ -324,6 +361,12 @@ const Upload = () => {
           .trim();
 
         if (cleaned.length > 0) {
+          if (looksLikeNavOrAuthGarbage(cleaned)) {
+            lastError = new Error(
+              "Unreadable page content; trying alternative source.",
+            );
+            continue;
+          }
           const maxLength = 20000;
           return cleaned.length > maxLength
             ? cleaned.slice(0, maxLength)
@@ -612,6 +655,7 @@ ${pageContent.slice(0, 8000)}`; // Limit content to avoid token limits
           prepareInstructions({
             jobTitle,
             jobDescription,
+            companyName,
           }),
         );
 
@@ -669,6 +713,7 @@ ${pageContent.slice(0, 8000)}`; // Limit content to avoid token limits
       if (!validateFeedbackStructure(parsedFeedback)) {
         console.error("AI feedback structure validation failed");
         console.error("Received structure:", parsedFeedback);
+        console.error("Parsed feedback text:", feedbackText.substring(0, 500));
 
         setStatusText("AI returned incomplete analysis. Please try again.");
         toast.error("Processing failed", {
