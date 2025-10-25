@@ -6,7 +6,7 @@ import Navbar from "~/components/Navbar";
 import ImportFromSiteModal from "~/components/ImportFromSiteModal";
 import { convertPdfToImage } from "~/lib/pdf2img";
 import { usePuterStore } from "~/lib/puter";
-import { generateUUID } from "~/lib/utils";
+import { cn, generateUUID } from "~/lib/utils";
 import { toast } from "sonner";
 import { Globe } from "lucide-react";
 
@@ -39,6 +39,16 @@ const Upload = () => {
   const [jobTitle, setJobTitle] = useState("");
   const [jobDescription, setJobDescription] = useState("");
   const [isImporting, setIsImporting] = useState(false);
+  const [touched, setTouched] = useState({
+    jobTitle: false,
+    jobDescription: false,
+    file: false,
+  });
+  const [fieldErrors, setFieldErrors] = useState({
+    jobTitle: "",
+    jobDescription: "",
+    file: "",
+  });
 
   const extractMessageText = (content: unknown): string => {
     if (!content) return "";
@@ -96,9 +106,140 @@ const Upload = () => {
     }
   };
 
+  const validateFeedbackStructure = (data: unknown): data is Feedback => {
+    if (!data || typeof data !== "object") return false;
+
+    const feedback = data as any;
+
+    const validateTips = (
+      tips: unknown,
+      { requireExplanation }: { requireExplanation: boolean },
+    ): boolean => {
+      if (!Array.isArray(tips)) return false;
+
+      for (const tip of tips) {
+        if (!tip || typeof tip !== "object") return false;
+
+        const tipEntry = tip as { type?: unknown; tip?: unknown; explanation?: unknown };
+
+        if (tipEntry.type !== "good" && tipEntry.type !== "improve") return false;
+        if (typeof tipEntry.tip !== "string" || !tipEntry.tip.trim()) return false;
+
+        if (requireExplanation) {
+          if (typeof tipEntry.explanation !== "string" || !tipEntry.explanation.trim()) {
+            return false;
+          }
+        }
+      }
+
+      return true;
+    };
+
+    const validateLineImprovements = (value: unknown): boolean => {
+      if (value === undefined) return true;
+      if (!Array.isArray(value)) return false;
+
+      for (const improvement of value) {
+        if (!improvement || typeof improvement !== "object") return false;
+        const entry = improvement as LineImprovement;
+
+        if (
+          !entry.section ||
+          !entry.sectionTitle ||
+          !entry.original ||
+          !entry.suggested ||
+          !entry.reason ||
+          !entry.priority ||
+          !entry.category
+        ) {
+          return false;
+        }
+      }
+
+      return true;
+    };
+
+    // Check required top-level fields
+    if (typeof feedback.overallScore !== "number") return false;
+
+    // Validate ATS tips
+    if (
+      !feedback.ATS ||
+      typeof feedback.ATS !== "object" ||
+      typeof feedback.ATS.score !== "number" ||
+      !validateTips(feedback.ATS.tips, { requireExplanation: false })
+    ) {
+      return false;
+    }
+
+    const sectionsRequiringExplanation = [
+      "toneAndStyle",
+      "content",
+      "structure",
+      "skills",
+    ];
+
+    for (const section of sectionsRequiringExplanation) {
+      const sectionData = feedback[section];
+      if (
+        !sectionData ||
+        typeof sectionData !== "object" ||
+        typeof sectionData.score !== "number" ||
+        !validateTips(sectionData.tips, { requireExplanation: true })
+      ) {
+        return false;
+      }
+    }
+
+    if (!validateLineImprovements(feedback.lineImprovements)) {
+      return false;
+    }
+
+    return true;
+  };
+
+  const validateJobTitle = (value: string): string => {
+    if (!value.trim()) return "Job title is required";
+    return "";
+  };
+
+  const validateJobDescription = (value: string): string => {
+    if (!value.trim()) return "Job description is required";
+    if (value.trim().length < 50) return "At least 50 characters needed";
+    return "";
+  };
+
+  const validateFile = (fileToValidate: File | null): string => {
+    if (!fileToValidate) return "Resume PDF is required";
+    if (fileToValidate.type !== "application/pdf") return "Only PDF files accepted";
+    if (fileToValidate.size === 0) return "File appears to be empty";
+    if (fileToValidate.size > 20 * 1024 * 1024) return "File must be under 20 MB";
+    return "";
+  };
+
   const handleFileSelect = (newFile: File | null) => {
     if (isProcessing) return;
     setFile(newFile);
+    setTouched((prev) => ({ ...prev, file: true }));
+
+    if (!newFile) {
+      setFieldErrors((prev) => ({
+        ...prev,
+        file: validateFile(null),
+      }));
+      setStatusText("Upload your resume to begin");
+      return;
+    }
+
+    const error = validateFile(newFile);
+    setFieldErrors((prev) => ({ ...prev, file: error }));
+
+    if (error) {
+      setStatusText(error);
+      return;
+    }
+
+    setStatusText("Resume uploaded. Ready when you are.");
   };
 
   const fetchPageContent = async (rawUrl: string): Promise<string> => {
@@ -202,6 +343,11 @@ const Upload = () => {
     const maxRetries = 3;
 
     try {
+      // Validate AI availability first
+      if (!ai || typeof ai.chat !== "function") {
+        throw new Error("AI service is not ready yet");
+      }
+
       // Fetch the page content
       const pageContent = await fetchPageContent(url);
 
@@ -238,22 +384,21 @@ ${pageContent.slice(0, 8000)}`; // Limit content to avoid token limits
           });
 
           if (!response || !response.message || !response.message.content) {
-            lastError = new Error(
-              "Failed to extract job details from the AI response"
-            );
+            lastError = new Error("AI service did not return a valid response");
             continue;
           }
 
           const content = extractMessageText(response.message.content);
 
           if (!content) {
-            lastError = new Error("AI response is empty");
+            lastError = new Error("AI response content is empty");
             continue;
           }
 
           // Parse the JSON response with guard
+          let parsed: unknown;
           try {
-            const parsed = JSON.parse(content) as unknown;
+            parsed = JSON.parse(content);
 
             if (parsed && typeof parsed === "object") {
               const candidate = parsed as {
@@ -327,24 +472,26 @@ ${pageContent.slice(0, 8000)}`; // Limit content to avoid token limits
     } catch (error) {
       console.error("Import error:", error);
 
-      const fallbackMessage =
-        "We couldn't import the job details. Please paste them manually.";
+      let toastDescription = "We couldn't import the job details. Please paste them manually.";
 
-      let toastDescription = fallbackMessage;
-
-      if (
-        error instanceof Error &&
-        (error.message === "Please enter a valid job posting URL." ||
-          error.message.startsWith("Unable to fetch"))
-      ) {
-        toastDescription = error.message;
+      if (error instanceof Error) {
+        // Handle specific error types
+        if (error.message === "Please enter a valid job posting URL.") {
+          toastDescription = error.message;
+        } else if (error.message.startsWith("Unable to fetch")) {
+          toastDescription = error.message;
+        } else if (error.message === "AI service is not ready yet") {
+          toastDescription = "The AI service is not ready yet. Please try again in a moment.";
+        } else if (error.message.includes("AI service") || error.message.includes("AI response")) {
+          toastDescription = "Failed to extract job details using AI. Please paste them manually.";
+        } else if (error.message.includes("parse") || error.message.includes("JSON")) {
+          toastDescription = "Failed to process the extracted data. Please paste the details manually.";
+        }
       }
 
       toast.error("Import failed", {
         description: toastDescription,
       });
-
-      throw new Error(toastDescription);
     } finally {
       setIsImporting(false);
     }
@@ -402,7 +549,7 @@ ${pageContent.slice(0, 8000)}`; // Limit content to avoid token limits
       }
 
       const uuid = generateUUID();
-      const data = {
+      const data: Omit<Resume, "feedback"> & { feedback: Feedback | "" } = {
         id: uuid,
         resumePath: uploadedFile.path,
         imagePath: uploadedImage.path,
@@ -425,8 +572,18 @@ ${pageContent.slice(0, 8000)}`; // Limit content to avoid token limits
 
       setStatusText("Analyzing your resume...");
 
+      if (!ai || typeof ai.feedback !== "function") {
+        setStatusText("AI analysis is currently unavailable. Please try again.");
+        toast.error("Analysis unavailable", {
+          description: "The AI service is not ready yet. Please try again in a moment.",
+        });
+        setIsProcessing(false);
+        return;
+      }
+
+      let feedback;
       try {
-        const feedback = await ai.feedback(
+        feedback = await ai.feedback(
           uploadedFile.path,
           prepareInstructions({
             jobTitle,
@@ -435,49 +592,46 @@ ${pageContent.slice(0, 8000)}`; // Limit content to avoid token limits
         );
 
         if (!feedback) {
-          setStatusText("Please try again later!");
-          toast.error("Analysis failed", {
-            description: "Please try again later!",
-          });
-          setIsProcessing(false);
-          return;
+          throw new Error("AI service did not return a response");
         }
 
-        const feedbackText = extractMessageText(feedback.message.content);
-
-        if (!feedbackText) {
-          setStatusText("Please try again later!");
-          toast.error("Processing failed", {
-            description: "AI response was empty. Please try again later!",
-          });
-          setIsProcessing(false);
-          return;
+        if (!feedback.message || !feedback.message.content) {
+          throw new Error("AI response is missing content");
         }
+      } catch (aiError: any) {
+        const errorDetails = getErrorMessage(aiError);
+        console.error("AI analysis error:", aiError);
+        
+        setStatusText("AI analysis failed. Please try again.");
+        toast.error("Analysis failed", {
+          description: errorDetails.includes("AI service")
+            ? "The AI service is currently unavailable. Please try again in a moment."
+            : "Failed to analyze your resume. Please try again.",
+        });
+        setIsProcessing(false);
+        return;
+      }
 
-        try {
-          const parsedFeedback = JSON.parse(feedbackText) as unknown;
+      const feedbackText = extractMessageText(feedback.message.content);
 
-          if (
-            !parsedFeedback ||
-            typeof parsedFeedback !== "object" ||
-            !("overallScore" in parsedFeedback)
-          ) {
-            setStatusText("Please try again later!");
-            toast.error("Processing failed", {
-              description: "Invalid analysis format. Please try again later!",
-            });
-            setIsProcessing(false);
-            return;
-          }
+      if (!feedbackText) {
+        setStatusText("AI response was empty. Please try again.");
+        toast.error("Processing failed", {
+          description: "AI response was empty. Please try again.",
+        });
+        setIsProcessing(false);
+        return;
+      }
 
-          data.feedback = parsedFeedback;
-        } catch (parseError) {
-          const errorDetails =
-            parseError instanceof Error
-              ? parseError.message
-              : "Unknown parsing error";
-
-          console.error("Failed to parse AI feedback:", errorDetails);
+      // Parse and validate the JSON response
+      let parsedFeedback: unknown;
+      try {
+        parsedFeedback = JSON.parse(feedbackText);
+      } catch (parseError) {
+        const errorDetails =
+          parseError instanceof Error
+            ? parseError.message
+            : "Unknown parsing error";
 
           setStatusText("Please try again later!");
           toast.error("Processing failed", {
@@ -488,36 +642,65 @@ ${pageContent.slice(0, 8000)}`; // Limit content to avoid token limits
           return;
         }
 
-        try {
-          await kv.set(`resume:${uuid}`, JSON.stringify(data));
-        } catch (kvSaveError) {
-          console.error("Failed to save feedback to KV:", kvSaveError);
-          setStatusText("Failed to save analysis. Please try again.");
-          toast.error("Storage failed", {
-            description: "Could not save your analysis. Please try again.",
-          });
-          setIsProcessing(false);
-          return;
-        }
-
-        setStatusText("All done! Redirecting to your results...");
-        navigate(`/resume/${uuid}`);
-      } catch (aiError: any) {
-        console.error("AI analysis error:", aiError);
-        setStatusText("Please try again later!");
-        toast.error("Analysis failed", {
-          description: "AI analysis failed. Please try again later!",
+        setStatusText("AI returned invalid data. Please try again.");
+        toast.error("Processing failed", {
+          description: "The AI response format was invalid. Please try again.",
         });
         setIsProcessing(false);
+        return;
       }
+
+      // Validate the structure matches the Feedback interface
+      if (!validateFeedbackStructure(parsedFeedback)) {
+        console.error("AI feedback structure validation failed");
+        console.error("Received structure:", parsedFeedback);
+
+        setStatusText("AI returned incomplete analysis. Please try again.");
+        toast.error("Processing failed", {
+          description: "The analysis result is incomplete or malformed. Please try again.",
+        });
+        setIsProcessing(false);
+        return;
+      }
+
+      // At this point, TypeScript knows parsedFeedback is a valid Feedback
+      data.feedback = parsedFeedback;
+
+      try {
+        await kv.set(`resume:${uuid}`, JSON.stringify(data));
+      } catch (kvSaveError) {
+        console.error("Failed to save feedback to KV:", kvSaveError);
+        setStatusText("Failed to save analysis. Please try again.");
+        toast.error("Storage failed", {
+          description: "Could not save your analysis. Please try again.",
+        });
+        setIsProcessing(false);
+        return;
+      }
+
+      setStatusText("All done! Redirecting to your results...");
+      navigate(`/resume/${uuid}`);
     } catch (error: any) {
       const errorMessage = getErrorMessage(error);
       console.error("Upload workflow error:", error);
 
-      setStatusText("Something went wrong. Please try again.");
+      let statusMessage = "Something went wrong. Please try again.";
+      let toastDescription = errorMessage || "An unexpected error occurred. Please try again.";
+
+      if (errorMessage.includes("Puter.js not available")) {
+        statusMessage = "Puter services are unavailable. Please refresh and try again.";
+        toastDescription = "We could not reach Puter services. Please refresh the page or try again shortly.";
+      } else if (errorMessage.includes("Failed to check auth status")) {
+        statusMessage = "Authentication issue detected. Please sign in again.";
+        toastDescription = "We could not verify your Puter session. Please sign in again and retry.";
+      } else if (errorMessage.includes("upload") || errorMessage.includes("Upload")) {
+        statusMessage = "Resume upload failed. Please try again.";
+        toastDescription = errorMessage;
+      }
+
+      setStatusText(statusMessage);
       toast.error("Unexpected error", {
-        description:
-          errorMessage || "An unexpected error occurred. Please try again.",
+        description: toastDescription,
       });
       setIsProcessing(false);
     }
@@ -525,23 +708,58 @@ ${pageContent.slice(0, 8000)}`; // Limit content to avoid token limits
 
   const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    if (isProcessing || !file) return;
+    if (isProcessing) return;
 
-    const trimmedJobTitle = jobTitle.trim();
-    const trimmedJobDescription = jobDescription.trim();
+    // Mark all fields as touched
+    setTouched({
+      jobTitle: true,
+      jobDescription: true,
+      file: true,
+    });
 
-    if (!trimmedJobTitle || !trimmedJobDescription) {
-      setStatusText(
-        "Add a job title and description so the feedback is personalized."
-      );
-      return;
+    // Validate all fields
+    const jobTitleError = validateJobTitle(jobTitle);
+    const jobDescriptionError = validateJobDescription(jobDescription);
+    const fileError = validateFile(file);
+
+    setFieldErrors({
+      jobTitle: jobTitleError,
+      jobDescription: jobDescriptionError,
+      file: fileError,
+    });
+
+    // Check for any errors
+    if (jobTitleError || jobDescriptionError || fileError) {
+      
+      
+      
+      if (jobTitleError) {
+        toast.error("Job title required", {
+          description: jobTitleError,
+        });
+        return;
+      }
+      
+      if (jobDescriptionError) {
+        toast.error("Job description issue", {
+          description: jobDescriptionError,
+        });
+        return;
+      }
+      
+      if (fileError) {
+        toast.error("Resume file issue", {
+          description: fileError,
+        });
+        return;
+      }
     }
 
     handleAnalyze({
       companyName: companyName.trim(),
-      jobTitle: trimmedJobTitle,
-      jobDescription: trimmedJobDescription,
-      file,
+      jobTitle: jobTitle.trim(),
+      jobDescription: jobDescription.trim(),
+      file: file!,
     });
   };
 
@@ -607,12 +825,40 @@ ${pageContent.slice(0, 8000)}`; // Limit content to avoid token limits
                   type="text"
                   id="job-title"
                   value={jobTitle}
-                  onChange={(e) => setJobTitle(e.target.value)}
+                  onChange={(e) => {
+                    setJobTitle(e.target.value);
+                    if (touched.jobTitle) {
+                      setFieldErrors((prev) => ({
+                        ...prev,
+                        jobTitle: validateJobTitle(e.target.value),
+                      }));
+                    }
+                  }}
+                  onBlur={(event) => {
+                    setTouched((prev) => ({ ...prev, jobTitle: true }));
+                    setFieldErrors((prev) => ({
+                      ...prev,
+                      jobTitle: validateJobTitle(event.target.value),
+                    }));
+                  }}
                   placeholder="e.g. Senior Product Designer"
-                  className="input-field"
+                  className={cn(
+                    "input-field",
+                    touched.jobTitle && fieldErrors.jobTitle && "!border-red-300 !bg-red-50/30",
+                    touched.jobTitle && !fieldErrors.jobTitle && "!border-green-300 !bg-green-50/20"
+                  )}
+                  aria-invalid={touched.jobTitle && Boolean(fieldErrors.jobTitle)}
+                  aria-describedby={
+                    touched.jobTitle && fieldErrors.jobTitle ? "job-title-error" : undefined
+                  }
                   required
                   disabled={isProcessing || isImporting}
                 />
+                {touched.jobTitle && fieldErrors.jobTitle && (
+                  <p id="job-title-error" className="text-sm font-medium text-red-600" role="alert">
+                    {fieldErrors.jobTitle}
+                  </p>
+                )}
               </div>
             </div>
 
@@ -624,19 +870,62 @@ ${pageContent.slice(0, 8000)}`; // Limit content to avoid token limits
                 rows={6}
                 id="job-description"
                 value={jobDescription}
-                onChange={(e) => setJobDescription(e.target.value)}
+                onChange={(e) => {
+                  setJobDescription(e.target.value);
+                  if (touched.jobDescription) {
+                    setFieldErrors((prev) => ({
+                      ...prev,
+                      jobDescription: validateJobDescription(e.target.value),
+                    }));
+                  }
+                }}
+                onBlur={(event) => {
+                  setTouched((prev) => ({ ...prev, jobDescription: true }));
+                  setFieldErrors((prev) => ({
+                    ...prev,
+                    jobDescription: validateJobDescription(event.target.value),
+                  }));
+                }}
                 placeholder="Paste the most important responsibilities and requirements"
-                className="textarea-field"
+                className={cn(
+                  "textarea-field",
+                  touched.jobDescription && fieldErrors.jobDescription && "!border-red-300 !bg-red-50/30",
+                  touched.jobDescription && !fieldErrors.jobDescription && jobDescription.trim().length >= 50 && "!border-green-300 !bg-green-50/20"
+                )}
+                aria-invalid={touched.jobDescription && Boolean(fieldErrors.jobDescription)}
+                aria-describedby={
+                  touched.jobDescription && fieldErrors.jobDescription
+                    ? "job-description-error"
+                    : undefined
+                }
                 required
                 disabled={isProcessing || isImporting}
               />
+              {touched.jobDescription && fieldErrors.jobDescription && (
+                <p id="job-description-error" className="text-sm font-medium text-red-600" role="alert">
+                  {fieldErrors.jobDescription}
+                </p>
+              )}
+              {touched.jobDescription && !fieldErrors.jobDescription && jobDescription.trim().length >= 50 && (
+                <p className="text-sm font-medium text-green-600">
+                  ✓ Looks good! ({jobDescription.trim().length} characters)
+                </p>
+              )}
             </div>
 
             <div className="input-wrapper">
               <label className="input-label required" htmlFor="resume-upload">
                 Resume PDF
               </label>
-              <FileUploader onFileSelect={handleFileSelect} />
+              <FileUploader
+                onFileSelect={handleFileSelect}
+                onErrorChange={(message) => {
+                  setFieldErrors((prev) => ({ ...prev, file: message }));
+                }}
+                error={touched.file ? fieldErrors.file : ""}
+                disabled={isProcessing || isImporting}
+                inputId="resume-upload"
+              />
               <p className="text-xs text-slate-500">
                 We store your file securely in your Puter drive so you can
                 revisit the analysis later.
