@@ -42,12 +42,14 @@ const ColdOutreach = ({ message }: { message: string }) => {
         </button>
       </div>
 
-      <p className="text-sm leading-6 text-slate-600">
-        <span className="font-semibold text-slate-700">Tip:</span> Before
-        sending, add a line referencing a recent company announcement, project,
-        or something specific from the hiring manager's profile to stand out
-        even more.
-      </p>
+      <div className="rounded-2xl border border-slate-200/60 bg-white/80 px-5 py-4 text-sm text-slate-600">
+        <p className="font-semibold text-slate-800">Tip</p>
+        <p className="mt-1">
+          Before sending, add a line referencing a recent company announcement,
+          project, or something specific from the hiring manager's profile to
+          stand out even more.
+        </p>
+      </div>
     </div>
   );
 };

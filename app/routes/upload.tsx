@@ -112,9 +112,12 @@ const Upload = () => {
 
     const fetchTargets: string[] = [targetUrl.toString()];
 
-    const jinaPrefix = targetUrl.protocol === "https:" ? "https://r.jina.ai/https://" : "https://r.jina.ai/http://";
+    const jinaPrefix =
+      targetUrl.protocol === "https:"
+        ? "https://r.jina.ai/https://"
+        : "https://r.jina.ai/http://";
     fetchTargets.push(
-      `${jinaPrefix}${targetUrl.host}${targetUrl.pathname}${targetUrl.search}`,
+      `${jinaPrefix}${targetUrl.host}${targetUrl.pathname}${targetUrl.search}`
     );
 
     let lastError: Error | null = null;
@@ -124,12 +127,15 @@ const Upload = () => {
         const response = await fetch(attemptUrl, {
           headers: {
             "User-Agent": "ResumindJobFetcher/1.0",
-            Accept: "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+            Accept:
+              "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
           },
         });
 
         if (!response.ok) {
-          lastError = new Error(`Failed to fetch: ${response.status} ${response.statusText}`);
+          lastError = new Error(
+            `Failed to fetch: ${response.status} ${response.statusText}`
+          );
           continue;
         }
 
@@ -140,7 +146,9 @@ const Upload = () => {
         }
 
         if (typeof window === "undefined" || typeof DOMParser === "undefined") {
-          lastError = new Error("Job importing is only available in the browser.");
+          lastError = new Error(
+            "Job importing is only available in the browser."
+          );
           continue;
         }
 
@@ -152,7 +160,7 @@ const Upload = () => {
         }
 
         const elementsToRemove = doc.querySelectorAll(
-          "script, style, noscript, iframe, svg, canvas, header nav, footer, aside",
+          "script, style, noscript, iframe, svg, canvas, header nav, footer, aside"
         );
         elementsToRemove.forEach((el) => el.remove());
 
@@ -165,28 +173,38 @@ const Upload = () => {
 
         if (cleaned.length > 0) {
           const maxLength = 20000;
-          return cleaned.length > maxLength ? cleaned.slice(0, maxLength) : cleaned;
+          return cleaned.length > maxLength
+            ? cleaned.slice(0, maxLength)
+            : cleaned;
         }
 
         lastError = new Error("The page did not contain readable content.");
       } catch (attemptError) {
-        lastError = attemptError instanceof Error
-          ? attemptError
-          : new Error("Failed to fetch the job posting due to a network error.");
+        lastError =
+          attemptError instanceof Error
+            ? attemptError
+            : new Error(
+                "Failed to fetch the job posting due to a network error."
+              );
       }
     }
 
-    throw lastError || new Error("Unable to fetch the job posting. Please copy and paste the job details manually.");
+    throw (
+      lastError ||
+      new Error(
+        "Unable to fetch the job posting. Please copy and paste the job details manually."
+      )
+    );
   };
 
   const handleImportFromSite = async (url: string) => {
     setIsImporting(true);
     const maxRetries = 3;
-    
+
     try {
       // Fetch the page content
       const pageContent = await fetchPageContent(url);
-      
+
       if (!pageContent) {
         throw new Error("No content found at the provided URL");
       }
@@ -215,12 +233,14 @@ ${pageContent.slice(0, 8000)}`; // Limit content to avoid token limits
       for (let attempt = 1; attempt <= maxRetries; attempt++) {
         try {
           const response = await ai.chat(prompt, {
-            model: "gpt-5-mini",
+            model: "gemini-2.0-flash",
             temperature: 0,
           });
 
           if (!response || !response.message || !response.message.content) {
-            lastError = new Error("Failed to extract job details from the AI response");
+            lastError = new Error(
+              "Failed to extract job details from the AI response"
+            );
             continue;
           }
 
@@ -243,13 +263,13 @@ ${pageContent.slice(0, 8000)}`; // Limit content to avoid token limits
               };
 
               const normalizedCompany = normalizeExtractedField(
-                candidate.companyName,
+                candidate.companyName
               );
               const normalizedJobTitle = normalizeExtractedField(
-                candidate.jobTitle,
+                candidate.jobTitle
               );
               const normalizedJobDescription = normalizeExtractedField(
-                candidate.jobDescription,
+                candidate.jobDescription
               );
 
               const allFieldsPresent =
@@ -266,7 +286,7 @@ ${pageContent.slice(0, 8000)}`; // Limit content to avoid token limits
                 break;
               } else {
                 lastError = new Error(
-                  "Extracted data missing required job details",
+                  "Extracted data missing required job details"
                 );
               }
             } else {
@@ -275,20 +295,23 @@ ${pageContent.slice(0, 8000)}`; // Limit content to avoid token limits
           } catch (parseError) {
             lastError = new Error(
               `Failed to parse AI response as JSON: ${
-                parseError instanceof Error ? parseError.message : "Unknown error"
-              }`,
+                parseError instanceof Error
+                  ? parseError.message
+                  : "Unknown error"
+              }`
             );
           }
         } catch (aiError) {
           lastError =
-            aiError instanceof Error
-              ? aiError
-              : new Error("AI request failed");
+            aiError instanceof Error ? aiError : new Error("AI request failed");
         }
       }
 
       if (!extracted) {
-        throw lastError || new Error("Failed to extract job details after multiple attempts");
+        throw (
+          lastError ||
+          new Error("Failed to extract job details after multiple attempts")
+        );
       }
 
       // Autofill the form fields
@@ -326,7 +349,6 @@ ${pageContent.slice(0, 8000)}`; // Limit content to avoid token limits
       setIsImporting(false);
     }
   };
-
 
   const handleAnalyze = async ({
     companyName,
@@ -409,7 +431,7 @@ ${pageContent.slice(0, 8000)}`; // Limit content to avoid token limits
           prepareInstructions({
             jobTitle,
             jobDescription,
-          }),
+          })
         );
 
         if (!feedback) {
@@ -459,7 +481,8 @@ ${pageContent.slice(0, 8000)}`; // Limit content to avoid token limits
 
           setStatusText("Please try again later!");
           toast.error("Processing failed", {
-            description: "Could not process AI feedback. Please try again later!",
+            description:
+              "Could not process AI feedback. Please try again later!",
           });
           setIsProcessing(false);
           return;
@@ -509,7 +532,7 @@ ${pageContent.slice(0, 8000)}`; // Limit content to avoid token limits
 
     if (!trimmedJobTitle || !trimmedJobDescription) {
       setStatusText(
-        "Add a job title and description so the feedback is personalized.",
+        "Add a job title and description so the feedback is personalized."
       );
       return;
     }

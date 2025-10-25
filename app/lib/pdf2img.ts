@@ -13,11 +13,16 @@ async function loadPdfJs(): Promise<any> {
   if (loadPromise) return loadPromise;
 
   isLoading = true;
-  // @ts-expect-error - pdfjs-dist is not a module in types
   loadPromise = import("pdfjs-dist").then((lib) => {
-    // Set the worker source to use local file
-    // Use the same static file that was previously working
-    lib.GlobalWorkerOptions.workerSrc = "/pdf.worker.min.mjs";
+    // Set up a bundler-managed worker so versions always match
+    if (typeof window === "undefined") {
+      throw new Error("PDF rendering is only available in the browser");
+    }
+    const worker = new Worker(
+      new URL("pdfjs-dist/build/pdf.worker.mjs", import.meta.url),
+      { type: "module" }
+    );
+    lib.GlobalWorkerOptions.workerPort = worker;
     pdfjsLib = lib;
     isLoading = false;
     return lib;
@@ -27,7 +32,7 @@ async function loadPdfJs(): Promise<any> {
 }
 
 export async function convertPdfToImage(
-  file: File,
+  file: File
 ): Promise<PdfConversionResult> {
   try {
     const lib = await loadPdfJs();
@@ -73,7 +78,7 @@ export async function convertPdfToImage(
           }
         },
         "image/png",
-        1.0,
+        1.0
       ); // Set quality to maximum (1.0)
     });
   } catch (err) {
