@@ -21,31 +21,35 @@ const FileUploader = ({
 }: FileUploaderProps) => {
   const maxFileSize = 20 * 1024 * 1024;
 
-  const handleRejection = useCallback((rejectedFiles: FileRejection[]) => {
-    const rejection = rejectedFiles[0];
-    const rejectionError = rejection?.errors?.[0];
+  const handleRejection = useCallback(
+    (rejectedFiles: FileRejection[]) => {
+      const rejection = rejectedFiles[0];
+      const rejectionError = rejection?.errors?.[0];
 
-    let message = rejectionError?.message || "Please upload a valid PDF file.";
+      let message =
+        rejectionError?.message || "Please upload a valid PDF file.";
 
-    if (rejectionError?.code === "file-too-large") {
-      message = "Please upload a PDF smaller than 20 MB.";
-      toast.error("File too large", {
-        description: message,
-      });
-    } else if (rejectionError?.code === "file-invalid-type") {
-      message = "Only PDF files are supported. Please upload a PDF resume.";
-      toast.error("Invalid file type", {
-        description: message,
-      });
-    } else {
-      toast.error("Upload error", {
-        description: message,
-      });
-    }
+      if (rejectionError?.code === "file-too-large") {
+        message = "Please upload a PDF smaller than 20 MB.";
+        toast.error("File too large", {
+          description: message,
+        });
+      } else if (rejectionError?.code === "file-invalid-type") {
+        message = "Only PDF files are supported. Please upload a PDF resume.";
+        toast.error("Invalid file type", {
+          description: message,
+        });
+      } else {
+        toast.error("Upload error", {
+          description: message,
+        });
+      }
 
-    onErrorChange?.(message);
-    onFileSelect?.(null);
-  }, [onErrorChange, onFileSelect]);
+      onErrorChange?.(message);
+      onFileSelect?.(null);
+    },
+    [onErrorChange, onFileSelect],
+  );
 
   const onDrop = useCallback(
     (acceptedFiles: File[], rejectedFiles: FileRejection[]) => {

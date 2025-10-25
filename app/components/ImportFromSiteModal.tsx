@@ -31,7 +31,7 @@ const ImportFromSiteModal = ({
       setError("");
     } catch (err) {
       setError(
-        err instanceof Error ? err.message : "Failed to import job posting"
+        err instanceof Error ? err.message : "Failed to import job posting",
       );
     } finally {
       setIsLoading(false);

@@ -65,10 +65,7 @@ export default function Home() {
                 parsedResumes.push(parsed);
               }
             } catch (parseError) {
-              console.error(
-                `Failed to parse resume ${item.key}:`,
-                parseError,
-              );
+              console.error(`Failed to parse resume ${item.key}:`, parseError);
             }
           }
         }

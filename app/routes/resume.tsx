@@ -5,7 +5,12 @@ import Details from "~/components/Details";
 import Summary from "~/components/Summary";
 import ColdOutreach from "~/components/ColdOutreach";
 import Navbar from "~/components/Navbar";
-import { CheckCheck, Lightbulb, NotebookPen, MessageSquare } from "lucide-react";
+import {
+  CheckCheck,
+  Lightbulb,
+  NotebookPen,
+  MessageSquare,
+} from "lucide-react";
 import AnalysisSection from "~/components/AnalysisSection";
 import LineByLineImprovements from "~/components/LineByLineImprovements";
 import {

@@ -20,7 +20,7 @@ async function loadPdfJs(): Promise<any> {
     }
     const worker = new Worker(
       new URL("pdfjs-dist/build/pdf.worker.mjs", import.meta.url),
-      { type: "module" }
+      { type: "module" },
     );
     lib.GlobalWorkerOptions.workerPort = worker;
     pdfjsLib = lib;
@@ -32,7 +32,7 @@ async function loadPdfJs(): Promise<any> {
 }
 
 export async function convertPdfToImage(
-  file: File
+  file: File,
 ): Promise<PdfConversionResult> {
   try {
     const lib = await loadPdfJs();
@@ -78,7 +78,7 @@ export async function convertPdfToImage(
           }
         },
         "image/png",
-        1.0
+        1.0,
       ); // Set quality to maximum (1.0)
     });
   } catch (err) {

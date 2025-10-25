@@ -120,13 +120,22 @@ const Upload = () => {
       for (const tip of tips) {
         if (!tip || typeof tip !== "object") return false;
 
-        const tipEntry = tip as { type?: unknown; tip?: unknown; explanation?: unknown };
+        const tipEntry = tip as {
+          type?: unknown;
+          tip?: unknown;
+          explanation?: unknown;
+        };
 
-        if (tipEntry.type !== "good" && tipEntry.type !== "improve") return false;
-        if (typeof tipEntry.tip !== "string" || !tipEntry.tip.trim()) return false;
+        if (tipEntry.type !== "good" && tipEntry.type !== "improve")
+          return false;
+        if (typeof tipEntry.tip !== "string" || !tipEntry.tip.trim())
+          return false;
 
         if (requireExplanation) {
-          if (typeof tipEntry.explanation !== "string" || !tipEntry.explanation.trim()) {
+          if (
+            typeof tipEntry.explanation !== "string" ||
+            !tipEntry.explanation.trim()
+          ) {
             return false;
           }
         }
@@ -211,9 +220,11 @@ const Upload = () => {
 
   const validateFile = (fileToValidate: File | null): string => {
     if (!fileToValidate) return "Resume PDF is required";
-    if (fileToValidate.type !== "application/pdf") return "Only PDF files accepted";
+    if (fileToValidate.type !== "application/pdf")
+      return "Only PDF files accepted";
     if (fileToValidate.size === 0) return "File appears to be empty";
-    if (fileToValidate.size > 20 * 1024 * 1024) return "File must be under 20 MB";
+    if (fileToValidate.size > 20 * 1024 * 1024)
+      return "File must be under 20 MB";
     return "";
   };
 
@@ -258,7 +269,7 @@ const Upload = () => {
         ? "https://r.jina.ai/https://"
         : "https://r.jina.ai/http://";
     fetchTargets.push(
-      `${jinaPrefix}${targetUrl.host}${targetUrl.pathname}${targetUrl.search}`
+      `${jinaPrefix}${targetUrl.host}${targetUrl.pathname}${targetUrl.search}`,
     );
 
     let lastError: Error | null = null;
@@ -275,7 +286,7 @@ const Upload = () => {
 
         if (!response.ok) {
           lastError = new Error(
-            `Failed to fetch: ${response.status} ${response.statusText}`
+            `Failed to fetch: ${response.status} ${response.statusText}`,
           );
           continue;
         }
@@ -288,7 +299,7 @@ const Upload = () => {
 
         if (typeof window === "undefined" || typeof DOMParser === "undefined") {
           lastError = new Error(
-            "Job importing is only available in the browser."
+            "Job importing is only available in the browser.",
           );
           continue;
         }
@@ -301,7 +312,7 @@ const Upload = () => {
         }
 
         const elementsToRemove = doc.querySelectorAll(
-          "script, style, noscript, iframe, svg, canvas, header nav, footer, aside"
+          "script, style, noscript, iframe, svg, canvas, header nav, footer, aside",
         );
         elementsToRemove.forEach((el) => el.remove());
 
@@ -325,7 +336,7 @@ const Upload = () => {
           attemptError instanceof Error
             ? attemptError
             : new Error(
-                "Failed to fetch the job posting due to a network error."
+                "Failed to fetch the job posting due to a network error.",
               );
       }
     }
@@ -333,7 +344,7 @@ const Upload = () => {
     throw (
       lastError ||
       new Error(
-        "Unable to fetch the job posting. Please copy and paste the job details manually."
+        "Unable to fetch the job posting. Please copy and paste the job details manually.",
       )
     );
   };
@@ -408,13 +419,13 @@ ${pageContent.slice(0, 8000)}`; // Limit content to avoid token limits
               };
 
               const normalizedCompany = normalizeExtractedField(
-                candidate.companyName
+                candidate.companyName,
               );
               const normalizedJobTitle = normalizeExtractedField(
-                candidate.jobTitle
+                candidate.jobTitle,
               );
               const normalizedJobDescription = normalizeExtractedField(
-                candidate.jobDescription
+                candidate.jobDescription,
               );
 
               const allFieldsPresent =
@@ -431,7 +442,7 @@ ${pageContent.slice(0, 8000)}`; // Limit content to avoid token limits
                 break;
               } else {
                 lastError = new Error(
-                  "Extracted data missing required job details"
+                  "Extracted data missing required job details",
                 );
               }
             } else {
@@ -443,7 +454,7 @@ ${pageContent.slice(0, 8000)}`; // Limit content to avoid token limits
                 parseError instanceof Error
                   ? parseError.message
                   : "Unknown error"
-              }`
+              }`,
             );
           }
         } catch (aiError) {
@@ -472,7 +483,8 @@ ${pageContent.slice(0, 8000)}`; // Limit content to avoid token limits
     } catch (error) {
       console.error("Import error:", error);
 
-      let toastDescription = "We couldn't import the job details. Please paste them manually.";
+      let toastDescription =
+        "We couldn't import the job details. Please paste them manually.";
 
       if (error instanceof Error) {
         // Handle specific error types
@@ -481,11 +493,20 @@ ${pageContent.slice(0, 8000)}`; // Limit content to avoid token limits
         } else if (error.message.startsWith("Unable to fetch")) {
           toastDescription = error.message;
         } else if (error.message === "AI service is not ready yet") {
-          toastDescription = "The AI service is not ready yet. Please try again in a moment.";
-        } else if (error.message.includes("AI service") || error.message.includes("AI response")) {
-          toastDescription = "Failed to extract job details using AI. Please paste them manually.";
-        } else if (error.message.includes("parse") || error.message.includes("JSON")) {
-          toastDescription = "Failed to process the extracted data. Please paste the details manually.";
+          toastDescription =
+            "The AI service is not ready yet. Please try again in a moment.";
+        } else if (
+          error.message.includes("AI service") ||
+          error.message.includes("AI response")
+        ) {
+          toastDescription =
+            "Failed to extract job details using AI. Please paste them manually.";
+        } else if (
+          error.message.includes("parse") ||
+          error.message.includes("JSON")
+        ) {
+          toastDescription =
+            "Failed to process the extracted data. Please paste the details manually.";
         }
       }
 
@@ -573,9 +594,12 @@ ${pageContent.slice(0, 8000)}`; // Limit content to avoid token limits
       setStatusText("Analyzing your resume...");
 
       if (!ai || typeof ai.feedback !== "function") {
-        setStatusText("AI analysis is currently unavailable. Please try again.");
+        setStatusText(
+          "AI analysis is currently unavailable. Please try again.",
+        );
         toast.error("Analysis unavailable", {
-          description: "The AI service is not ready yet. Please try again in a moment.",
+          description:
+            "The AI service is not ready yet. Please try again in a moment.",
         });
         setIsProcessing(false);
         return;
@@ -588,7 +612,7 @@ ${pageContent.slice(0, 8000)}`; // Limit content to avoid token limits
           prepareInstructions({
             jobTitle,
             jobDescription,
-          })
+          }),
         );
 
         if (!feedback) {
@@ -601,7 +625,7 @@ ${pageContent.slice(0, 8000)}`; // Limit content to avoid token limits
       } catch (aiError: any) {
         const errorDetails = getErrorMessage(aiError);
         console.error("AI analysis error:", aiError);
-        
+
         setStatusText("AI analysis failed. Please try again.");
         toast.error("Analysis failed", {
           description: errorDetails.includes("AI service")
@@ -633,18 +657,9 @@ ${pageContent.slice(0, 8000)}`; // Limit content to avoid token limits
             ? parseError.message
             : "Unknown parsing error";
 
-          setStatusText("Please try again later!");
-          toast.error("Processing failed", {
-            description:
-              "Could not process AI feedback. Please try again later!",
-          });
-          setIsProcessing(false);
-          return;
-        }
-
-        setStatusText("AI returned invalid data. Please try again.");
+        setStatusText("Please try again later!");
         toast.error("Processing failed", {
-          description: "The AI response format was invalid. Please try again.",
+          description: "Could not process AI feedback. Please try again later!",
         });
         setIsProcessing(false);
         return;
@@ -657,7 +672,8 @@ ${pageContent.slice(0, 8000)}`; // Limit content to avoid token limits
 
         setStatusText("AI returned incomplete analysis. Please try again.");
         toast.error("Processing failed", {
-          description: "The analysis result is incomplete or malformed. Please try again.",
+          description:
+            "The analysis result is incomplete or malformed. Please try again.",
         });
         setIsProcessing(false);
         return;
@@ -685,15 +701,22 @@ ${pageContent.slice(0, 8000)}`; // Limit content to avoid token limits
       console.error("Upload workflow error:", error);
 
       let statusMessage = "Something went wrong. Please try again.";
-      let toastDescription = errorMessage || "An unexpected error occurred. Please try again.";
+      let toastDescription =
+        errorMessage || "An unexpected error occurred. Please try again.";
 
       if (errorMessage.includes("Puter.js not available")) {
-        statusMessage = "Puter services are unavailable. Please refresh and try again.";
-        toastDescription = "We could not reach Puter services. Please refresh the page or try again shortly.";
+        statusMessage =
+          "Puter services are unavailable. Please refresh and try again.";
+        toastDescription =
+          "We could not reach Puter services. Please refresh the page or try again shortly.";
       } else if (errorMessage.includes("Failed to check auth status")) {
         statusMessage = "Authentication issue detected. Please sign in again.";
-        toastDescription = "We could not verify your Puter session. Please sign in again and retry.";
-      } else if (errorMessage.includes("upload") || errorMessage.includes("Upload")) {
+        toastDescription =
+          "We could not verify your Puter session. Please sign in again and retry.";
+      } else if (
+        errorMessage.includes("upload") ||
+        errorMessage.includes("Upload")
+      ) {
         statusMessage = "Resume upload failed. Please try again.";
         toastDescription = errorMessage;
       }
@@ -730,23 +753,20 @@ ${pageContent.slice(0, 8000)}`; // Limit content to avoid token limits
 
     // Check for any errors
     if (jobTitleError || jobDescriptionError || fileError) {
-      
-      
-      
       if (jobTitleError) {
         toast.error("Job title required", {
           description: jobTitleError,
         });
         return;
       }
-      
+
       if (jobDescriptionError) {
         toast.error("Job description issue", {
           description: jobDescriptionError,
         });
         return;
       }
-      
+
       if (fileError) {
         toast.error("Resume file issue", {
           description: fileError,
@@ -844,18 +864,30 @@ ${pageContent.slice(0, 8000)}`; // Limit content to avoid token limits
                   placeholder="e.g. Senior Product Designer"
                   className={cn(
                     "input-field",
-                    touched.jobTitle && fieldErrors.jobTitle && "!border-red-300 !bg-red-50/30",
-                    touched.jobTitle && !fieldErrors.jobTitle && "!border-green-300 !bg-green-50/20"
+                    touched.jobTitle &&
+                      fieldErrors.jobTitle &&
+                      "!border-red-300 !bg-red-50/30",
+                    touched.jobTitle &&
+                      !fieldErrors.jobTitle &&
+                      "!border-green-300 !bg-green-50/20",
                   )}
-                  aria-invalid={touched.jobTitle && Boolean(fieldErrors.jobTitle)}
+                  aria-invalid={
+                    touched.jobTitle && Boolean(fieldErrors.jobTitle)
+                  }
                   aria-describedby={
-                    touched.jobTitle && fieldErrors.jobTitle ? "job-title-error" : undefined
+                    touched.jobTitle && fieldErrors.jobTitle
+                      ? "job-title-error"
+                      : undefined
                   }
                   required
                   disabled={isProcessing || isImporting}
                 />
                 {touched.jobTitle && fieldErrors.jobTitle && (
-                  <p id="job-title-error" className="text-sm font-medium text-red-600" role="alert">
+                  <p
+                    id="job-title-error"
+                    className="text-sm font-medium text-red-600"
+                    role="alert"
+                  >
                     {fieldErrors.jobTitle}
                   </p>
                 )}
@@ -889,10 +921,17 @@ ${pageContent.slice(0, 8000)}`; // Limit content to avoid token limits
                 placeholder="Paste the most important responsibilities and requirements"
                 className={cn(
                   "textarea-field",
-                  touched.jobDescription && fieldErrors.jobDescription && "!border-red-300 !bg-red-50/30",
-                  touched.jobDescription && !fieldErrors.jobDescription && jobDescription.trim().length >= 50 && "!border-green-300 !bg-green-50/20"
+                  touched.jobDescription &&
+                    fieldErrors.jobDescription &&
+                    "!border-red-300 !bg-red-50/30",
+                  touched.jobDescription &&
+                    !fieldErrors.jobDescription &&
+                    jobDescription.trim().length >= 50 &&
+                    "!border-green-300 !bg-green-50/20",
                 )}
-                aria-invalid={touched.jobDescription && Boolean(fieldErrors.jobDescription)}
+                aria-invalid={
+                  touched.jobDescription && Boolean(fieldErrors.jobDescription)
+                }
                 aria-describedby={
                   touched.jobDescription && fieldErrors.jobDescription
                     ? "job-description-error"
@@ -902,15 +941,21 @@ ${pageContent.slice(0, 8000)}`; // Limit content to avoid token limits
                 disabled={isProcessing || isImporting}
               />
               {touched.jobDescription && fieldErrors.jobDescription && (
-                <p id="job-description-error" className="text-sm font-medium text-red-600" role="alert">
+                <p
+                  id="job-description-error"
+                  className="text-sm font-medium text-red-600"
+                  role="alert"
+                >
                   {fieldErrors.jobDescription}
                 </p>
               )}
-              {touched.jobDescription && !fieldErrors.jobDescription && jobDescription.trim().length >= 50 && (
-                <p className="text-sm font-medium text-green-600">
-                  ✓ Looks good! ({jobDescription.trim().length} characters)
-                </p>
-              )}
+              {touched.jobDescription &&
+                !fieldErrors.jobDescription &&
+                jobDescription.trim().length >= 50 && (
+                  <p className="text-sm font-medium text-green-600">
+                    ✓ Looks good! ({jobDescription.trim().length} characters)
+                  </p>
+                )}
             </div>
 
             <div className="input-wrapper">
