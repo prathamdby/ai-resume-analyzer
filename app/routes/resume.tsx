@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router";
 import ATS from "~/components/ATS";
 import Details from "~/components/Details";
@@ -37,6 +37,10 @@ const Resume = () => {
     jobTitle?: string;
   } | null>(null);
   const navigate = useNavigate();
+  
+  // Use refs to store current URLs for cleanup
+  const resumeUrlRef = useRef<string | null>(null);
+  const imageUrlRef = useRef<string | null>(null);
 
   useEffect(() => {
     if (!isLoading && !auth.isAuthenticated) {
@@ -77,11 +81,13 @@ const Resume = () => {
         if (resumeBlob) {
           const pdfBlob = new Blob([resumeBlob], { type: "application/pdf" });
           const resumeObjectUrl = URL.createObjectURL(pdfBlob);
+          resumeUrlRef.current = resumeObjectUrl;
           setResumeUrl(resumeObjectUrl);
         }
 
         if (imageBlob) {
           const imageObjectUrl = URL.createObjectURL(imageBlob);
+          imageUrlRef.current = imageObjectUrl;
           setImageUrl(imageObjectUrl);
         }
 
@@ -97,8 +103,12 @@ const Resume = () => {
 
     // Cleanup: Revoke object URLs when component unmounts to prevent memory leaks
     return () => {
-      if (resumeUrl) URL.revokeObjectURL(resumeUrl);
-      if (imageUrl) URL.revokeObjectURL(imageUrl);
+      if (resumeUrlRef.current) {
+        URL.revokeObjectURL(resumeUrlRef.current);
+      }
+      if (imageUrlRef.current) {
+        URL.revokeObjectURL(imageUrlRef.current);
+      }
     };
   }, [id]);
 

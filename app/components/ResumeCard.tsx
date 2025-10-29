@@ -1,6 +1,6 @@
 ﻿import { Link } from "react-router";
 import ScoreCircle from "./ScoreCircle";
-import { memo, useEffect, useMemo, useState } from "react";
+import { memo, useEffect, useMemo, useRef, useState } from "react";
 import { usePuterStore } from "~/lib/puter";
 
 const ResumeCard = memo(({
@@ -12,6 +12,7 @@ const ResumeCard = memo(({
 }) => {
   const { fs } = usePuterStore();
   const [resumeUrl, setResumeUrl] = useState<string | null>(null);
+  const resumeUrlRef = useRef<string | null>(null);
 
   const hasFeedback = typeof feedback === "object" && feedback !== null;
 
@@ -35,6 +36,7 @@ const ResumeCard = memo(({
       const blob = await fs.read(imagePath);
       if (!blob) return;
       const url = URL.createObjectURL(blob);
+      resumeUrlRef.current = url;
       setResumeUrl(url);
     };
 
@@ -42,8 +44,8 @@ const ResumeCard = memo(({
 
     // Cleanup: Revoke object URL when component unmounts to prevent memory leaks
     return () => {
-      if (resumeUrl) {
-        URL.revokeObjectURL(resumeUrl);
+      if (resumeUrlRef.current) {
+        URL.revokeObjectURL(resumeUrlRef.current);
       }
     };
   }, [imagePath]);
