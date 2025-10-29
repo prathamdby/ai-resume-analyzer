@@ -68,20 +68,26 @@ const Resume = () => {
           jobTitle: data.jobTitle || undefined,
         });
 
-        if (data.resumePath) {
-          const resumeBlob = await fs.read(data.resumePath);
-          if (resumeBlob) {
-            const pdfBlob = new Blob([resumeBlob], { type: "application/pdf" });
+        // Parallelize file reads for better performance
+        if (data.resumePath || data.imagePath) {
+          const [resumeResult, imageResult] = await Promise.allSettled([
+            data.resumePath ? fs.read(data.resumePath) : Promise.resolve(null),
+            data.imagePath ? fs.read(data.imagePath) : Promise.resolve(null),
+          ]);
+
+          if (resumeResult.status === 'fulfilled' && resumeResult.value) {
+            const pdfBlob = new Blob([resumeResult.value], { type: "application/pdf" });
             const resumeObjectUrl = URL.createObjectURL(pdfBlob);
             setResumeUrl(resumeObjectUrl);
+          } else if (resumeResult.status === 'rejected') {
+            console.error('Failed to load resume PDF:', resumeResult.reason);
           }
-        }
 
-        if (data.imagePath) {
-          const imageBlob = await fs.read(data.imagePath);
-          if (imageBlob) {
-            const imageObjectUrl = URL.createObjectURL(imageBlob);
+          if (imageResult.status === 'fulfilled' && imageResult.value) {
+            const imageObjectUrl = URL.createObjectURL(imageResult.value);
             setImageUrl(imageObjectUrl);
+          } else if (imageResult.status === 'rejected') {
+            console.error('Failed to load resume image:', imageResult.reason);
           }
         }
 
@@ -95,6 +101,26 @@ const Resume = () => {
 
     loadResume();
   }, [id]);
+
+  // Cleanup URLs on unmount
+  useEffect(() => {
+    return () => {
+      if (imageUrl) {
+        try {
+          URL.revokeObjectURL(imageUrl);
+        } catch (e) {
+          // Ignore errors from already-revoked URLs
+        }
+      }
+      if (resumeUrl) {
+        try {
+          URL.revokeObjectURL(resumeUrl);
+        } catch (e) {
+          // Ignore errors from already-revoked URLs
+        }
+      }
+    };
+  }, [imageUrl, resumeUrl]);
 
   return (
     <main className="relative overflow-hidden">

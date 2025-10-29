@@ -257,20 +257,26 @@ export const usePuterStore = create<PuterStore>((set, get) => {
       return;
     }
 
-    const interval = setInterval(() => {
+    // Use exponential backoff to reduce polling checks from 100 to ~10-15
+    let delay = 100;
+    let totalWait = 0;
+    
+    const checkPuter = () => {
       if (getPuter()) {
-        clearInterval(interval);
         set({ puterReady: true });
         checkAuthStatus();
-      }
-    }, 100);
-
-    setTimeout(() => {
-      clearInterval(interval);
-      if (!getPuter()) {
+      } else if (totalWait < 10000) {
+        setTimeout(() => {
+          totalWait += delay;
+          delay = Math.min(delay * 2, 2000);
+          checkPuter();
+        }, delay);
+      } else {
         setError("Puter.js failed to load within 10 seconds");
       }
-    }, 10000);
+    };
+    
+    checkPuter();
   };
 
   const write = async (path: string, data: string | File | Blob) => {
@@ -297,7 +303,10 @@ export const usePuterStore = create<PuterStore>((set, get) => {
       setError("Puter.js not available");
       return;
     }
-    return puter.fs.read(path);
+    const startTime = performance.now();
+    const result = await puter.fs.read(path);
+    console.log(`FS read ${path} took ${(performance.now() - startTime).toFixed(2)}ms`);
+    return result;
   };
 
   const upload = async (files: File[] | Blob[]) => {

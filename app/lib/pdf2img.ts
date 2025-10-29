@@ -7,6 +7,7 @@ export interface PdfConversionResult {
 let pdfjsLib: any = null;
 let isLoading = false;
 let loadPromise: Promise<any> | null = null;
+let workerInstance: Worker | null = null;
 
 async function loadPdfJs(): Promise<any> {
   if (pdfjsLib) return pdfjsLib;
@@ -18,11 +19,16 @@ async function loadPdfJs(): Promise<any> {
     if (typeof window === "undefined") {
       throw new Error("PDF rendering is only available in the browser");
     }
-    const worker = new Worker(
-      new URL("pdfjs-dist/build/pdf.worker.mjs", import.meta.url),
-      { type: "module" },
-    );
-    lib.GlobalWorkerOptions.workerPort = worker;
+    
+    // Reuse existing worker or create new
+    if (!workerInstance) {
+      workerInstance = new Worker(
+        new URL("pdfjs-dist/build/pdf.worker.mjs", import.meta.url),
+        { type: "module" },
+      );
+    }
+    
+    lib.GlobalWorkerOptions.workerPort = workerInstance;
     pdfjsLib = lib;
     isLoading = false;
     return lib;
@@ -31,9 +37,20 @@ async function loadPdfJs(): Promise<any> {
   return loadPromise;
 }
 
+// Export cleanup function for worker termination
+export function terminatePdfWorker() {
+  if (workerInstance) {
+    workerInstance.terminate();
+    workerInstance = null;
+    pdfjsLib = null;
+    loadPromise = null;
+  }
+}
+
 export async function convertPdfToImage(
   file: File,
 ): Promise<PdfConversionResult> {
+  const startTime = performance.now();
   try {
     const lib = await loadPdfJs();
 
@@ -41,7 +58,8 @@ export async function convertPdfToImage(
     const pdf = await lib.getDocument({ data: arrayBuffer }).promise;
     const page = await pdf.getPage(1);
 
-    const viewport = page.getViewport({ scale: 4 });
+    // Reduced scale from 4 to 2 for better performance (4x less memory)
+    const viewport = page.getViewport({ scale: 2 });
     const canvas = document.createElement("canvas");
     const context = canvas.getContext("2d");
 
@@ -56,14 +74,27 @@ export async function convertPdfToImage(
     await page.render({ canvasContext: context!, viewport }).promise;
 
     return new Promise((resolve) => {
+      // Try WebP first, fallback to PNG
+      const testCanvas = document.createElement('canvas');
+      testCanvas.width = 1;
+      testCanvas.height = 1;
+      const supportsWebP = testCanvas.toDataURL('image/webp').indexOf('data:image/webp') === 0;
+      
+      const format = supportsWebP ? 'image/webp' : 'image/png';
+      const quality = supportsWebP ? 0.9 : 1.0;
+      
       canvas.toBlob(
         (blob) => {
           if (blob) {
             // Create a File from the blob with the same name as the pdf
             const originalName = file.name.replace(/\.pdf$/i, "");
-            const imageFile = new File([blob], `${originalName}.png`, {
-              type: "image/png",
+            const ext = supportsWebP ? '.webp' : '.png';
+            const imageFile = new File([blob], `${originalName}${ext}`, {
+              type: format,
             });
+
+            const duration = performance.now() - startTime;
+            console.log(`PDF conversion took ${duration.toFixed(2)}ms`);
 
             resolve({
               imageUrl: URL.createObjectURL(blob),
@@ -77,9 +108,9 @@ export async function convertPdfToImage(
             });
           }
         },
-        "image/png",
-        1.0,
-      ); // Set quality to maximum (1.0)
+        format,
+        quality,
+      );
     });
   } catch (err) {
     return {

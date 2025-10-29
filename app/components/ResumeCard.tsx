@@ -1,9 +1,10 @@
 ﻿import { Link } from "react-router";
 import ScoreCircle from "./ScoreCircle";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useRef } from "react";
 import { usePuterStore } from "~/lib/puter";
+import React from "react";
 
-const ResumeCard = ({
+const ResumeCard = React.memo(({
   resume: { id, companyName, jobTitle, feedback, imagePath },
   onDelete,
 }: {
@@ -12,6 +13,8 @@ const ResumeCard = ({
 }) => {
   const { fs } = usePuterStore();
   const [resumeUrl, setResumeUrl] = useState<string | null>(null);
+  const [isVisible, setIsVisible] = useState(false);
+  const cardRef = useRef<HTMLDivElement>(null);
 
   const hasFeedback = typeof feedback === "object" && feedback !== null;
 
@@ -28,21 +31,74 @@ const ResumeCard = ({
     ];
 
     return pairs.sort((a, b) => b.score - a.score).slice(0, 2);
-  }, [hasFeedback, feedback]);
+  }, [
+    hasFeedback,
+    feedback?.toneAndStyle?.score,
+    feedback?.content?.score,
+    feedback?.structure?.score,
+    feedback?.skills?.score,
+  ]);
 
+  // Intersection observer for lazy loading
   useEffect(() => {
+    // Feature detection - load immediately if not supported
+    if (typeof window === 'undefined' || !('IntersectionObserver' in window)) {
+      setIsVisible(true);
+      return;
+    }
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setIsVisible(true);
+          observer.disconnect();
+        }
+      },
+      {
+        rootMargin: '50px', // Start loading 50px before entering viewport
+      }
+    );
+
+    if (cardRef.current) {
+      observer.observe(cardRef.current);
+    }
+
+    return () => observer.disconnect();
+  }, []);
+
+  // Load image only when visible
+  useEffect(() => {
+    if (!isVisible) return;
+
     const loadResume = async () => {
-      const blob = await fs.read(imagePath);
-      if (!blob) return;
-      const url = URL.createObjectURL(blob);
-      setResumeUrl(url);
+      try {
+        const blob = await fs.read(imagePath);
+        if (!blob) return;
+        const url = URL.createObjectURL(blob);
+        setResumeUrl(url);
+      } catch (error) {
+        console.error('Failed to load resume image:', error);
+      }
     };
 
     loadResume();
-  }, [imagePath]);
+  }, [isVisible, imagePath, fs]);
+
+  // Cleanup URL on unmount
+  useEffect(() => {
+    return () => {
+      if (resumeUrl) {
+        try {
+          URL.revokeObjectURL(resumeUrl);
+        } catch (e) {
+          // Ignore errors from already-revoked URLs
+        }
+      }
+    };
+  }, [resumeUrl]);
 
   return (
-    <div className="relative">
+    <div ref={cardRef} className="relative">
       {onDelete && (
         <button
           onClick={(e) => {
@@ -155,6 +211,18 @@ const ResumeCard = ({
       </Link>
     </div>
   );
-};
+}, (prevProps, nextProps) => {
+  // Return true if props are equal (skip re-render)
+  return (
+    prevProps.resume.id === nextProps.resume.id &&
+    prevProps.resume.imagePath === nextProps.resume.imagePath &&
+    prevProps.resume.companyName === nextProps.resume.companyName &&
+    prevProps.resume.jobTitle === nextProps.resume.jobTitle &&
+    prevProps.resume.feedback?.overallScore === nextProps.resume.feedback?.overallScore &&
+    prevProps.onDelete === nextProps.onDelete
+  );
+});
+
+ResumeCard.displayName = 'ResumeCard';
 
 export default ResumeCard;
