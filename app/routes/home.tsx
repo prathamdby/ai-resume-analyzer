@@ -7,6 +7,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router";
 import { usePuterStore } from "~/lib/puter";
 import { toast } from "sonner";
+import type { KVPair } from "@heyputer/puter.js";
 
 export function meta({}: Route.MetaArgs) {
   return [
@@ -53,7 +54,7 @@ export default function Home() {
       setLoadingResumes(true);
 
       try {
-        const items = (await kv.list("resume:*", true)) as KVItem[];
+        const items = (await kv.list("resume:*", true)) as KVPair[];
 
         const parsedResumes: Resume[] = [];
 
