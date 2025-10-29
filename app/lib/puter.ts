@@ -49,7 +49,7 @@ interface PuterStore {
     ) => Promise<string | undefined>;
   };
   kv: {
-    get: (key: string) => Promise<any>;
+    get: (key: string) => Promise<unknown>;
     set: (key: string, value: string) => Promise<boolean | undefined>;
     delete: (key: string) => Promise<boolean | undefined>;
     list: (
