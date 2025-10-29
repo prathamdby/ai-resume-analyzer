@@ -287,6 +287,29 @@ const Upload = () => {
     return badHits >= 3 && !hasJDSignals;
   };
 
+  const cleanHtmlContent = (html: string): string => {
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(html, "text/html");
+    
+    if (!doc?.body) {
+      throw new Error("Could not parse the job posting HTML.");
+    }
+
+    // Remove unwanted elements
+    const elementsToRemove = doc.querySelectorAll(
+      "script, style, noscript, iframe, svg, canvas, header nav, footer, aside",
+    );
+    elementsToRemove.forEach((el) => el.remove());
+
+    // Extract and clean text
+    const textContent = doc.body.innerText || doc.body.textContent || "";
+    return textContent
+      .replace(/\u00a0/g, " ")
+      .replace(/\s+\n/g, "\n")
+      .replace(/\n{3,}/g, "\n\n")
+      .trim();
+  };
+
   const fetchPageContent = async (rawUrl: string): Promise<string> => {
     let targetUrl: URL;
 
@@ -341,24 +364,7 @@ const Upload = () => {
           continue;
         }
 
-        const parser = new DOMParser();
-        const doc = parser.parseFromString(html, "text/html");
-        if (!doc?.body) {
-          lastError = new Error("Could not parse the job posting HTML.");
-          continue;
-        }
-
-        const elementsToRemove = doc.querySelectorAll(
-          "script, style, noscript, iframe, svg, canvas, header nav, footer, aside",
-        );
-        elementsToRemove.forEach((el) => el.remove());
-
-        const textContent = doc.body.innerText || doc.body.textContent || "";
-        const cleaned = textContent
-          .replace(/\u00a0/g, " ")
-          .replace(/\s+\n/g, "\n")
-          .replace(/\n{3,}/g, "\n\n")
-          .trim();
+        const cleaned = cleanHtmlContent(html);
 
         if (cleaned.length > 0) {
           if (looksLikeNavOrAuthGarbage(cleaned)) {
@@ -576,7 +582,12 @@ ${pageContent.slice(0, 8000)}`; // Limit content to avoid token limits
     setStatusText("Uploading your resume...");
 
     try {
-      const uploadedFile = await fs.upload([file]);
+      // Optimize: Start PDF upload and image conversion in parallel
+      const [uploadedFile, imageFile] = await Promise.all([
+        fs.upload([file]),
+        convertPdfToImage(file),
+      ]);
+
       if (!uploadedFile) {
         setStatusText("We could not upload your file. Please try again.");
         toast.error("Upload failed", {
@@ -586,8 +597,6 @@ ${pageContent.slice(0, 8000)}`; // Limit content to avoid token limits
         return;
       }
 
-      setStatusText("Preparing your resume for analysis...");
-      const imageFile = await convertPdfToImage(file);
       if (!imageFile.file) {
         const errorMsg = imageFile.error
           ? `We had trouble processing your resume: ${imageFile.error}`

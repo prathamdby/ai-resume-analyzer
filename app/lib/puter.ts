@@ -257,13 +257,14 @@ export const usePuterStore = create<PuterStore>((set, get) => {
       return;
     }
 
+    // Reduced polling frequency from 100ms to 250ms to decrease CPU usage
     const interval = setInterval(() => {
       if (getPuter()) {
         clearInterval(interval);
         set({ puterReady: true });
         checkAuthStatus();
       }
-    }, 100);
+    }, 250);
 
     setTimeout(() => {
       clearInterval(interval);
@@ -416,14 +417,16 @@ export const usePuterStore = create<PuterStore>((set, get) => {
     }
 
     if (returnValues) {
-      return puter.kv.list(pattern, true) as Promise<KVItem[]>;
+      // Cast the result explicitly, as we know it will return KVItem[] when returnValues is true
+      return puter.kv.list(pattern, true) as unknown as Promise<KVItem[]>;
     }
 
     if (pattern) {
       return puter.kv.list(pattern, false) as Promise<string[]>;
     }
 
-    return puter.kv.list(undefined, false) as Promise<string[]>;
+    // Pass empty string instead of undefined
+    return puter.kv.list("", false) as Promise<string[]>;
   };
 
   const flushKV = async () => {

@@ -1,5 +1,6 @@
 ﻿import { useEffect, useState } from "react";
 import { useNavigate } from "react-router";
+import type { FSItem } from "../../types/puter";
 import Navbar from "~/components/Navbar";
 import { usePuterStore } from "~/lib/puter";
 
@@ -139,7 +140,7 @@ const WipeApp = () => {
                       {file.name}
                     </span>
                     <span className="text-xs uppercase tracking-[0.28em] text-slate-400">
-                      {file.type}
+                      {file.is_dir ? "DIR" : "FILE"}
                     </span>
                   </li>
                 ))}

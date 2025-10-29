@@ -1,4 +1,5 @@
 import type { Route } from "./+types/home";
+import type { KVItem } from "../../types/puter";
 
 import Navbar from "~/components/Navbar";
 import ResumeCard from "~/components/ResumeCard";
@@ -55,20 +56,27 @@ export default function Home() {
       try {
         const items = (await kv.list("resume:*", true)) as KVItem[];
 
-        const parsedResumes: Resume[] = [];
-
-        if (items && Array.isArray(items)) {
-          for (const item of items) {
-            try {
-              const parsed = JSON.parse(item.value) as Resume;
-              if (parsed && typeof parsed === "object" && parsed.id) {
-                parsedResumes.push(parsed);
-              }
-            } catch (parseError) {
-              console.error(`Failed to parse resume ${item.key}:`, parseError);
-            }
-          }
+        if (!items || !Array.isArray(items)) {
+          setResumes([]);
+          return;
         }
+
+        // Optimize: Parse only valid resumes with feedback and filter in one pass
+        const parsedResumes: Resume[] = items.reduce((acc: Resume[], item) => {
+          try {
+            const parsed = JSON.parse(item.value) as Resume;
+            // Only include resumes with valid structure and feedback
+            if (parsed?.id && parsed.feedback) {
+              acc.push(parsed);
+            }
+          } catch (parseError) {
+            console.error(`Failed to parse resume ${item.key}:`, parseError);
+          }
+          return acc;
+        }, []);
+
+        // Sort by most recent (assuming IDs contain timestamps or are sequential)
+        parsedResumes.sort((a, b) => b.id.localeCompare(a.id));
 
         setResumes(parsedResumes);
       } catch (error) {
@@ -82,10 +90,8 @@ export default function Home() {
     loadResumes();
   }, []);
 
-  const finishedResumes = useMemo(
-    () => resumes.filter((resume) => !!resume.feedback),
-    [resumes],
-  );
+  // Since resumes are already filtered for feedback during load, finishedResumes = resumes
+  const finishedResumes = resumes;
 
   const hasResumes = finishedResumes.length > 0;
 

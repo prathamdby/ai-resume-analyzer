@@ -41,7 +41,9 @@ export async function convertPdfToImage(
     const pdf = await lib.getDocument({ data: arrayBuffer }).promise;
     const page = await pdf.getPage(1);
 
-    const viewport = page.getViewport({ scale: 4 });
+    // Reduced scale from 4 to 2 for faster rendering and smaller image sizes
+    // Scale of 2 provides good quality while being 4x smaller in file size
+    const viewport = page.getViewport({ scale: 2 });
     const canvas = document.createElement("canvas");
     const context = canvas.getContext("2d");
 
