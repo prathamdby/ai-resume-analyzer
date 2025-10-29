@@ -79,6 +79,10 @@ const Resume = () => {
         ]);
 
         if (resumeBlob) {
+          // Revoke previous URL if it exists to prevent memory leak
+          if (resumeUrlRef.current) {
+            URL.revokeObjectURL(resumeUrlRef.current);
+          }
           const pdfBlob = new Blob([resumeBlob], { type: "application/pdf" });
           const resumeObjectUrl = URL.createObjectURL(pdfBlob);
           resumeUrlRef.current = resumeObjectUrl;
@@ -86,6 +90,10 @@ const Resume = () => {
         }
 
         if (imageBlob) {
+          // Revoke previous URL if it exists to prevent memory leak
+          if (imageUrlRef.current) {
+            URL.revokeObjectURL(imageUrlRef.current);
+          }
           const imageObjectUrl = URL.createObjectURL(imageBlob);
           imageUrlRef.current = imageObjectUrl;
           setImageUrl(imageObjectUrl);

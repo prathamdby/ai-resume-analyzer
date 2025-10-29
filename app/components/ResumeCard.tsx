@@ -35,6 +35,10 @@ const ResumeCard = memo(({
     const loadResume = async () => {
       const blob = await fs.read(imagePath);
       if (!blob) return;
+      // Revoke previous URL if it exists to prevent memory leak
+      if (resumeUrlRef.current) {
+        URL.revokeObjectURL(resumeUrlRef.current);
+      }
       const url = URL.createObjectURL(blob);
       resumeUrlRef.current = url;
       setResumeUrl(url);
