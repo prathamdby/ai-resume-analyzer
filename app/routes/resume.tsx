@@ -68,21 +68,21 @@ const Resume = () => {
           jobTitle: data.jobTitle || undefined,
         });
 
-        if (data.resumePath) {
-          const resumeBlob = await fs.read(data.resumePath);
-          if (resumeBlob) {
-            const pdfBlob = new Blob([resumeBlob], { type: "application/pdf" });
-            const resumeObjectUrl = URL.createObjectURL(pdfBlob);
-            setResumeUrl(resumeObjectUrl);
-          }
+        // Parallelize reading resume and image blobs for faster loading
+        const [resumeBlob, imageBlob] = await Promise.all([
+          data.resumePath ? fs.read(data.resumePath) : Promise.resolve(null),
+          data.imagePath ? fs.read(data.imagePath) : Promise.resolve(null),
+        ]);
+
+        if (resumeBlob) {
+          const pdfBlob = new Blob([resumeBlob], { type: "application/pdf" });
+          const resumeObjectUrl = URL.createObjectURL(pdfBlob);
+          setResumeUrl(resumeObjectUrl);
         }
 
-        if (data.imagePath) {
-          const imageBlob = await fs.read(data.imagePath);
-          if (imageBlob) {
-            const imageObjectUrl = URL.createObjectURL(imageBlob);
-            setImageUrl(imageObjectUrl);
-          }
+        if (imageBlob) {
+          const imageObjectUrl = URL.createObjectURL(imageBlob);
+          setImageUrl(imageObjectUrl);
         }
 
         if (data.feedback) {
@@ -94,6 +94,12 @@ const Resume = () => {
     };
 
     loadResume();
+
+    // Cleanup: Revoke object URLs when component unmounts to prevent memory leaks
+    return () => {
+      if (resumeUrl) URL.revokeObjectURL(resumeUrl);
+      if (imageUrl) URL.revokeObjectURL(imageUrl);
+    };
   }, [id]);
 
   return (

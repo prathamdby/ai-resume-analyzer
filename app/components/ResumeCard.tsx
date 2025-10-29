@@ -1,9 +1,9 @@
 ﻿import { Link } from "react-router";
 import ScoreCircle from "./ScoreCircle";
-import { useEffect, useMemo, useState } from "react";
+import { memo, useEffect, useMemo, useState } from "react";
 import { usePuterStore } from "~/lib/puter";
 
-const ResumeCard = ({
+const ResumeCard = memo(({
   resume: { id, companyName, jobTitle, feedback, imagePath },
   onDelete,
 }: {
@@ -39,6 +39,13 @@ const ResumeCard = ({
     };
 
     loadResume();
+
+    // Cleanup: Revoke object URL when component unmounts to prevent memory leaks
+    return () => {
+      if (resumeUrl) {
+        URL.revokeObjectURL(resumeUrl);
+      }
+    };
   }, [imagePath]);
 
   return (
@@ -155,6 +162,8 @@ const ResumeCard = ({
       </Link>
     </div>
   );
-};
+});
+
+ResumeCard.displayName = 'ResumeCard';
 
 export default ResumeCard;
