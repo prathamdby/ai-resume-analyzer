@@ -35,27 +35,3 @@ export const formatSize = (bytes: number): string => {
  * generateUUID() // "550e8400-e29b-41d4-a716-446655440000"
  */
 export const generateUUID = () => crypto.randomUUID();
-
-/**
- * Creates a debounced function that delays invoking func until after wait milliseconds
- * have elapsed since the last time the debounced function was invoked.
- *
- * @param fn - The function to debounce
- * @param delay - The number of milliseconds to delay
- * @returns The debounced function
- *
- * @example
- * const debouncedSearch = debounce((query) => search(query), 300);
- * debouncedSearch('hello'); // Called once after 300ms of no calls
- */
-export function debounce<T extends (...args: any[]) => any>(
-  fn: T,
-  delay: number
-): (...args: Parameters<T>) => void {
-  let timeoutId: ReturnType<typeof setTimeout> | undefined;
-  
-  return function(this: any, ...args: Parameters<T>) {
-    clearTimeout(timeoutId);
-    timeoutId = setTimeout(() => fn.apply(this, args), delay);
-  };
-}

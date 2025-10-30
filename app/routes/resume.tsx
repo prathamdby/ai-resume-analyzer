@@ -200,7 +200,7 @@ const Resume = () => {
                   {feedback.coldOutreachMessage && (
                     <AnalysisSection
                       id="cold-outreach"
-                      icon={{ name: "message", Icon: MessageSquare }}
+                      icon={{ Icon: MessageSquare }}
                       title="Cold Outreach Message"
                       eyebrow="Personalized follow-up"
                       description="Use this tailored note to connect with the hiring team."
@@ -211,7 +211,7 @@ const Resume = () => {
 
                   <AnalysisSection
                     id="ats"
-                    icon={{ name: "fact_check", Icon: CheckCheck }}
+                    icon={{ Icon: CheckCheck }}
                     title="ATS Readiness"
                     eyebrow="Parser score"
                     description="Stay above 80 to stay visible in recruiter dashboards."
@@ -230,7 +230,7 @@ const Resume = () => {
                     feedback.lineImprovements.length > 0 && (
                       <AnalysisSection
                         id="line-improvements"
-                        icon={{ name: "stylus_note", Icon: NotebookPen }}
+                        icon={{ Icon: NotebookPen }}
                         title="Line-by-Line Improvements"
                         eyebrow="Rewrite suggestions"
                         description="Drop in these replacements to boost clarity, impact, and keyword density."
@@ -247,7 +247,7 @@ const Resume = () => {
 
                   <AnalysisSection
                     id="detailed-coaching"
-                    icon={{ name: "lightbulb", Icon: Lightbulb }}
+                    icon={{ Icon: Lightbulb }}
                     title="Detailed Coaching"
                     eyebrow="Category breakdown"
                     description="Expand each section to review what is working well and the edits that will unlock the next score jump."
