@@ -18,15 +18,10 @@ interface PuterStore {
     isAuthenticated: boolean;
     signIn: () => Promise<void>;
     signOut: () => Promise<void>;
-    refreshUser: () => Promise<void>;
     checkAuthStatus: () => Promise<boolean>;
     getUser: () => User | null;
   };
   fs: {
-    write: (
-      path: string,
-      data: string | File | Blob,
-    ) => Promise<File | undefined>;
     read: (path: string) => Promise<Blob | undefined>;
     upload: (file: File[] | Blob[]) => Promise<FSItem | undefined>;
     delete: (path: string) => Promise<void>;
@@ -37,16 +32,12 @@ interface PuterStore {
       prompt: string | ChatMessage[],
       imageURL?: string | ChatOptions,
       testMode?: boolean,
-      options?: ChatOptions,
+      options?: ChatOptions
     ) => Promise<ChatResponse | undefined>;
     feedback: (
       path: string,
-      message: string,
+      message: string
     ) => Promise<ChatResponse | undefined>;
-    img2txt: (
-      image: string | File | Blob,
-      testMode?: boolean,
-    ) => Promise<string | undefined>;
   };
   kv: {
     get: (key: string) => Promise<unknown>;
@@ -54,7 +45,7 @@ interface PuterStore {
     delete: (key: string) => Promise<boolean | undefined>;
     list: (
       pattern?: string,
-      returnValues?: boolean,
+      returnValues?: boolean
     ) => Promise<string[] | KVPair[] | undefined>;
     flush: () => Promise<boolean | undefined>;
   };
@@ -81,7 +72,6 @@ export const usePuterStore = create<PuterStore>((set, get) => {
         isAuthenticated: false,
         signIn: get().auth.signIn,
         signOut: get().auth.signOut,
-        refreshUser: get().auth.refreshUser,
         checkAuthStatus: get().auth.checkAuthStatus,
         getUser: get().auth.getUser,
       },
@@ -107,7 +97,6 @@ export const usePuterStore = create<PuterStore>((set, get) => {
             isAuthenticated: true,
             signIn: get().auth.signIn,
             signOut: get().auth.signOut,
-            refreshUser: get().auth.refreshUser,
             checkAuthStatus: get().auth.checkAuthStatus,
             getUser: () => user,
           },
@@ -121,7 +110,6 @@ export const usePuterStore = create<PuterStore>((set, get) => {
             isAuthenticated: false,
             signIn: get().auth.signIn,
             signOut: get().auth.signOut,
-            refreshUser: get().auth.refreshUser,
             checkAuthStatus: get().auth.checkAuthStatus,
             getUser: () => null,
           },
@@ -172,7 +160,6 @@ export const usePuterStore = create<PuterStore>((set, get) => {
           isAuthenticated: false,
           signIn: get().auth.signIn,
           signOut: get().auth.signOut,
-          refreshUser: get().auth.refreshUser,
           checkAuthStatus: get().auth.checkAuthStatus,
           getUser: () => null,
         },
@@ -180,35 +167,6 @@ export const usePuterStore = create<PuterStore>((set, get) => {
       });
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Sign out failed";
-      setError(msg);
-    }
-  };
-
-  const refreshUser = async (): Promise<void> => {
-    const puter = getPuter();
-    if (!puter) {
-      setError("Puter.js not available");
-      return;
-    }
-
-    set({ isLoading: true, error: null });
-
-    try {
-      const user = await puter.auth.getUser();
-      set({
-        auth: {
-          user,
-          isAuthenticated: true,
-          signIn: get().auth.signIn,
-          signOut: get().auth.signOut,
-          refreshUser: get().auth.refreshUser,
-          checkAuthStatus: get().auth.checkAuthStatus,
-          getUser: () => user,
-        },
-        isLoading: false,
-      });
-    } catch (err) {
-      const msg = err instanceof Error ? err.message : "Failed to refresh user";
       setError(msg);
     }
   };
@@ -224,7 +182,7 @@ export const usePuterStore = create<PuterStore>((set, get) => {
     // Use exponential backoff to reduce polling checks from 100 to ~10-15
     let delay = 100;
     let totalWait = 0;
-    
+
     const checkPuter = () => {
       if (getPuter()) {
         set({ puterReady: true });
@@ -239,17 +197,8 @@ export const usePuterStore = create<PuterStore>((set, get) => {
         setError("Puter.js failed to load within 10 seconds");
       }
     };
-    
-    checkPuter();
-  };
 
-  const write = async (path: string, data: string | File | Blob) => {
-    const puter = getPuter();
-    if (!puter) {
-      setError("Puter.js not available");
-      return;
-    }
-    return puter.fs.write(path, data);
+    checkPuter();
   };
 
   const readDir = async (path: string) => {
@@ -269,7 +218,9 @@ export const usePuterStore = create<PuterStore>((set, get) => {
     }
     const startTime = performance.now();
     const result = await puter.fs.read(path);
-    console.log(`FS read ${path} took ${(performance.now() - startTime).toFixed(2)}ms`);
+    console.log(
+      `FS read ${path} took ${(performance.now() - startTime).toFixed(2)}ms`
+    );
     return result;
   };
 
@@ -295,7 +246,7 @@ export const usePuterStore = create<PuterStore>((set, get) => {
     prompt: string | ChatMessage[],
     imageURL?: string | ChatOptions,
     testMode?: boolean,
-    options?: ChatOptions,
+    options?: ChatOptions
   ) => {
     const puter = getPuter();
     if (!puter) {
@@ -333,17 +284,8 @@ export const usePuterStore = create<PuterStore>((set, get) => {
       {
         model: "claude-3-7-sonnet",
         temperature: 0.0,
-      },
+      }
     ) as Promise<ChatResponse | undefined>;
-  };
-
-  const img2txt = async (image: string | File | Blob, testMode?: boolean) => {
-    const puter = getPuter();
-    if (!puter) {
-      setError("Puter.js not available");
-      return;
-    }
-    return puter.ai.img2txt(image, testMode);
   };
 
   const getKV = async (key: string) => {
@@ -413,12 +355,10 @@ export const usePuterStore = create<PuterStore>((set, get) => {
       isAuthenticated: false,
       signIn,
       signOut,
-      refreshUser,
       checkAuthStatus,
       getUser: () => get().auth.user,
     },
     fs: {
-      write: (path: string, data: string | File | Blob) => write(path, data),
       read: (path: string) => readFile(path),
       readDir: (path: string) => readDir(path),
       upload: (files: File[] | Blob[]) => upload(files),
@@ -429,11 +369,9 @@ export const usePuterStore = create<PuterStore>((set, get) => {
         prompt: string | ChatMessage[],
         imageURL?: string | ChatOptions,
         testMode?: boolean,
-        options?: ChatOptions,
+        options?: ChatOptions
       ) => chat(prompt, imageURL, testMode, options),
       feedback: (path: string, message: string) => feedback(path, message),
-      img2txt: (image: string | File | Blob, testMode?: boolean) =>
-        img2txt(image, testMode),
     },
     kv: {
       get: (key: string) => getKV(key),

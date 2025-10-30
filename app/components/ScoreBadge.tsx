@@ -2,14 +2,12 @@
 
 interface ScoreBadgeProps {
   score: number;
-  showLabel?: boolean;
   showScore?: boolean;
   size?: "sm" | "md";
 }
 
 const ScoreBadge: React.FC<ScoreBadgeProps> = ({
   score,
-  showLabel = true,
   showScore = true,
   size = "md",
 }) => {
@@ -52,9 +50,7 @@ const ScoreBadge: React.FC<ScoreBadgeProps> = ({
       )}
       aria-label={`Score ${clampedScore} out of 100, ${palette.label}`}
     >
-      {showLabel && (
-        <span className="font-medium tracking-tight">{palette.label}</span>
-      )}
+      <span className="font-medium tracking-tight">{palette.label}</span>
       {showScore && (
         <span className="font-semibold text-slate-900/70">
           {clampedScore}

@@ -3,7 +3,6 @@ import type { LucideIcon } from "lucide-react";
 
 interface SectionHeaderProps {
   icon?: {
-    name: string;
     tone?: "indigo" | "amber" | "emerald";
     Icon?: LucideIcon;
   };
@@ -33,20 +32,14 @@ const SectionHeader = ({
   return (
     <div className="flex w-full flex-wrap items-start justify-between gap-4 py-1 md:flex-nowrap md:items-center">
       <div className="flex flex-1 items-start gap-4">
-        {icon && (
+        {icon && icon.Icon && (
           <span
             className={cn(
               "inline-flex size-12 shrink-0 items-center justify-center rounded-2xl text-lg",
               iconPalette[iconTone],
             )}
           >
-            {icon.Icon ? (
-              <icon.Icon className="h-5 w-5" />
-            ) : (
-              <span className="material-symbols-rounded text-[22px]">
-                {icon.name}
-              </span>
-            )}
+            <icon.Icon className="h-5 w-5" />
           </span>
         )}
         <div className="flex flex-col gap-1">

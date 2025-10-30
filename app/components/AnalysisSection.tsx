@@ -1,13 +1,11 @@
 import type { ReactNode } from "react";
 import type { LucideIcon } from "lucide-react";
-import { cn } from "~/lib/utils";
 import { AccordionContent, AccordionHeader, AccordionItem } from "./Accordion";
 import SectionHeader from "./SectionHeader";
 
 interface AnalysisSectionProps {
   id: string;
   icon?: {
-    name: string;
     Icon?: LucideIcon;
     tone?: "indigo" | "amber" | "emerald";
   };
@@ -19,7 +17,6 @@ interface AnalysisSectionProps {
     value: number;
   };
   children: ReactNode;
-  contentClassName?: string;
 }
 
 const AnalysisSection = ({
@@ -30,7 +27,6 @@ const AnalysisSection = ({
   description,
   badge,
   children,
-  contentClassName,
 }: AnalysisSectionProps) => {
   return (
     <AccordionItem id={id}>
@@ -48,7 +44,7 @@ const AnalysisSection = ({
       </AccordionHeader>
       <AccordionContent
         itemId={id}
-        className={cn("section-panel", contentClassName)}
+        className="section-panel"
       >
         {children}
       </AccordionContent>

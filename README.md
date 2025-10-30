@@ -139,7 +139,7 @@ The production build requires:
 
 ```
 ├── package.json
-├── bun.lockb
+├── bun.lock
 ├── build/
 │   ├── client/    # Static assets
 │   └── server/    # Server-side code
